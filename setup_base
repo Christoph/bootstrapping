@@ -4,4 +4,4 @@
 mkdir -p ~/dev
 
 # Dependencies
-sudo apt-get install build-essential cmake python-dev git r-base vim curl openssl libssl-dev
+sudo apt-get install build-essential cmake python-dev r-base vim curl openssl libssl-dev
