@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Create folders
+mkdir -p ~/dev
+
+# Basic
+sudo apt-get install git r-base vim curl openssl libssl-dev
+
+# Numeric 
+sudo apt-get install libatlas3, libatlas3-dev 

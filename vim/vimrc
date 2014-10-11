@@ -1,0 +1,191 @@
+" -----------------------------------------------------------
+" Vundle configuration
+" -----------------------------------------------------------
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" Vundle handels itself
+Bundle 'gmarik/Vundle.vim' 
+" Replaced by Ctrlp
+"Bundle 'scrooloose/nerdtree' 
+" Asynchrone make
+Bundle 'tpope/vim-dispatch' 
+" Git plugin
+Bundle 'tpope/vim-fugitive'
+" Auto-complete brackets
+Bundle 'jiangmiao/auto-pairs' 
+" easy openeing new files
+Bundle 'kien/ctrlp.vim' 
+" Syntax highlighting
+Bundle 'scrooloose/syntastic' 
+" Create surrounding brackets with shortcuts
+Bundle 'tpope/vim-surround' 
+" Intellisense for JS
+Bundle 'marijnh/tern_for_vim' 
+" Replaced by YCM
+"Bundle 'ervandew/supertab' 
+" Typescript support
+"Bundle 'leafgarland/typescript-vim'
+" Improved status bar
+Bundle 'bling/vim-airline' 
+" Latex support
+Bundle 'git://vim-latex.git.sourceforge.net/gitroot/vim-latex/vim-latex' 
+" Intellisense
+Bundle 'Valloric/YouCompleteMe' 
+" Color theme
+Bundle 'chriskempson/tomorrow-theme' 
+
+call vundle#end()            " required
+filetype plugin indent on    " required
+
+" -----------------------------------------------------------
+" Basic configuration
+" -----------------------------------------------------------
+
+syntax on
+
+set hidden
+
+" Activate vim syntax completion may conflict with YouCompleteMe
+" set omnifunc=syntaxcomplete#complete
+
+" Colorscheme
+set t_Co=256
+colorscheme Tomorrow-Night-Bright
+
+" Encoding to utf-8
+set encoding=utf-8
+
+" Always show mode
+set showmode
+
+" Show command in status
+set showcmd
+
+" Show the cursorline
+set cursorline
+
+" Show cursor position in the status bar
+set ruler
+
+" Whitespace
+set backspace=indent,eol,start
+set shiftwidth=2
+set softtabstop=2
+set tabstop=2
+set smarttab
+set expandtab
+"set list
+"set listchars=tab:>-,trail:·,extends:>,eol:
+
+" Always show some context
+set scrolloff=4
+set sidescrolloff=5
+
+" Always show statusbar
+set laststatus=2
+
+" Increase command history capacity
+set history=400
+
+" Search
+set ignorecase
+set smartcase
+set incsearch
+set showmatch
+set hlsearch
+
+" set g as default for :%s/foo/bar
+set gdefault
+
+" Deactivate for security reasons
+set modelines=0
+
+" Show linenumbers
+set number
+
+" Set indent settings
+"set cindent
+set smartindent
+
+" -----------------------------------------------------------
+" Keymap configuration
+" -----------------------------------------------------------
+
+" Toogle with F4 highlight search
+noremap <F4> set hlsearch! hlsearch?<CR>
+
+" Hide highlight with space
+noremap <silent> <Space> :nohlsearch<Bar>:echo<CR>
+
+" Jump between bracket with tab in normal and visual
+noremap <Tab> %
+vnoremap <Tab> %
+
+" Unbind arrow keys
+nnoremap <up> <nop>
+nnoremap <down> <nop>
+nnoremap <left> <nop>
+nnoremap <right> <nop>
+inoremap <up> <nop>
+inoremap <down> <nop>
+inoremap <left> <nop>
+inoremap <right> <nop>
+
+" scroll by visual lines
+nnoremap j gj
+nnoremap k gk
+
+" Additional escape bindings
+inoremap <F1> <ESC>
+nnoremap <F1> <ESC>
+vnoremap <F1> <ESC>
+inoremap jj <ESC>
+
+" In case of missing :  
+nnoremap ; :
+
+" map ` to <Leader>m because it doesn't work on german keyboards
+nnoremap <Leader>m `
+
+" Switch to tab or create tab when switching buffer
+set switchbuf=usetab,newtab
+
+" Close Quickfix window
+noremap <C-c> :cclose<CR>
+
+" Next Buffer 
+noremap <C-b> :bnext<CR>
+
+" -----------------------------------------------------------
+" Plugin configuration
+" -----------------------------------------------------------
+
+" vim-latex
+let g:tex_flavor='latex'
+let g:Tex_DefaultTargetFormat='pdf'
+let g:Tex_CompileRule_pdf='pdflatex -shell-escape -interaction=nonstopmode $*'
+
+" Nerdtree
+" noremap <C-n> :NERDTreeToggle<CR>
+
+" Syntastic
+" Make the list a little shorter
+let g:syntastic_loc_list_height = 5
+
+" airline
+let g:airline_powerline_fonts=1
+let g:airline#extensions#tabline#enabled = 1
+set noshowmode
+
+" YouCompleteMe
+" nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
+" don't ask before using YCM
+let g:ycm_confirm_extra_conf = 0
+
+" SuperTab 
+" let g:SuperTabDefaultCompletionType = context"

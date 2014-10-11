@@ -1,0 +1,11 @@
+#!/bin/bash
+
+function create-alias() {
+	if [ ! -f "$2" ]; then
+		  ln -s $(pwd -P)/$(dirname "$0")/$1 $2
+			  fi
+}
+
+$(create-alias vim/tmux.conf ~/.tmux.conf)
+$(create-alias git/gitconfig ~/.gitconfig)
+$(create-alias vim/vimrc ~/.vimrc)

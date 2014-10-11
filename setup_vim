@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# This script initalizes vim on a new computer
+
+# Prepare Vundle
+mkdir -p ~/.vim/autoload ~/.vim/bundle
+git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+
+# Install Plugins
+vim +PluginInstall +qall
+
+# Install Fonts
+# Change font in terminal to Droid Sans Mono for Powerline
+mkdir ~/.fonts
+git clone https://github.com/Lokaltog/powerline-fonts.git ~/.fonts
+sudo fc-cache -vf ~/.fonts
+
+# Move color scheme
+cp ~/.vim/bundle/tomorrow-theme/vim/colors/ -r ~/.vim/
+
+# Compile YCM
+cd ~/.vim/bundle/YouCompleteMe 
+./install.sh --clang-completer
