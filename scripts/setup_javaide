@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Java 
+sudo apt-get install openjdk-7-jdk
+
+cd ~/dev
+tar -zxvf ~/Downloads/eclipse-*.tar.gz
+
+# Copy Shortcut
+sudo cp ~/dev/bootstrapping/templates/eclipse.desktop /usr/share/applications/eclipse.desktop
+
+# Eclim
+mkdir ~/dev/eclim
+cd ~/dev/eclim
+wget http://sourceforge.net/projects/eclim/files/eclim/2.4.0/eclim_2.4.0.jar
+java -jar eclim_2.4.0.jar

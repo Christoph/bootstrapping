@@ -1,6 +1,9 @@
 The scripts in this project initializing linux and vim on a new system.
 
-Git is necessary!
+Prerequisites:
+Git
+
+If Eclipse is needed download newest version!
 
 1. setup_base to install all dependencies and base packages
 2. create_links to create the symbolic links for .vimrc, .gitconfig and .tmux_config

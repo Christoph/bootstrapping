@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Eclipse 4
+Type=Application
+Exec=~/dev/eclipse/eclipse
+Terminal=false
+Icon=~/dev/eclipse/icon.xpm
+Comment=Integrated Development Environment
+NoDisplay=false
+Categories=Development;IDE;
+Name[en]=Eclipse
