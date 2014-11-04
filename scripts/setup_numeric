@@ -1,7 +1,4 @@
 #!/bin/bash
 
-# Create folders
-mkdir -p ~/dev
-
 # Numeric 
 sudo apt-get install libatlas3, libatlas3-dev 
