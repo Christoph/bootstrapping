@@ -113,7 +113,10 @@ set number
 set smartindent
 
 " Remove scratch preview from autocomplete
-set completeopt-=preview
+"set completeopt-=preview
+
+" Closes the preview window after leaving the insert mode
+autocmd InsertLeave * if pumvisible() == 0|pclose|endif
 
 " -----------------------------------------------------------
 " Keymap configuration
