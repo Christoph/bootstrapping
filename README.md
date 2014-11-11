@@ -2,6 +2,7 @@ The scripts in this project initializing linux and vim on a new system.
 
 Prerequisites:
 Git
+create folder: ~/dev
 
 If Eclipse is needed download newest version!
 
