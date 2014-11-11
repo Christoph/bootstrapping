@@ -112,6 +112,10 @@ set number
 "set cindent
 set smartindent
 
+" Set Ecim settings
+let g:EclimCompletionMethod = 'omnifunc'
+:set completeopt-=preview
+
 " -----------------------------------------------------------
 " Keymap configuration
 " -----------------------------------------------------------
@@ -163,7 +167,6 @@ noremap <C-h> :bnext<CR>
 noremap <C-l> :bprevious<CR>
 
 " Eclim autocomplete
-let g:EclimCompletionMethod = 'omnifunc'
 noremap <C-b> :Java<CR>
 
 " -----------------------------------------------------------
