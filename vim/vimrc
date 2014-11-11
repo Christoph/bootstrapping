@@ -112,9 +112,8 @@ set number
 "set cindent
 set smartindent
 
-" Set Ecim settings
-let g:EclimCompletionMethod = 'omnifunc'
-:set completeopt-=preview
+" Remove scratch preview from autocomplete
+set completeopt-=preview
 
 " -----------------------------------------------------------
 " Keymap configuration
@@ -194,6 +193,9 @@ set noshowmode
 " nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
 " don't ask before using YCM
 let g:ycm_confirm_extra_conf = 0
+
+" Eclim
+let g:EclimCompletionMethod = 'omnifunc'
 
 " SuperTab 
 " let g:SuperTabDefaultCompletionType = context"
