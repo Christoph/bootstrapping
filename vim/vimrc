@@ -165,8 +165,8 @@ set switchbuf=usetab,newtab
 noremap <C-c> :cclose<CR>
 
 "Buffer 
-noremap <C-h> :bnext<CR>
-noremap <C-l> :bprevious<CR>
+noremap <C-l> :bnext<CR>
+noremap <C-h> :bprevious<CR>
 
 " Eclim autocomplete
 noremap <C-b> :Java<CR>
