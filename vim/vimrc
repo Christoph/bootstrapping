@@ -10,10 +10,6 @@ call vundle#begin()
 
 " Vundle handels itself
 Bundle 'gmarik/Vundle.vim' 
-" Replaced by Ctrlp
-"Bundle 'scrooloose/nerdtree' 
-" Asynchrone make
-Bundle 'tpope/vim-dispatch' 
 " Git plugin
 Bundle 'tpope/vim-fugitive'
 " Auto-complete brackets
@@ -22,14 +18,8 @@ Bundle 'jiangmiao/auto-pairs'
 Bundle 'kien/ctrlp.vim' 
 " Syntax highlighting
 Bundle 'scrooloose/syntastic' 
-" Create surrounding brackets with shortcuts
-Bundle 'tpope/vim-surround' 
 " Intellisense for JS
 Bundle 'marijnh/tern_for_vim' 
-" Replaced by YCM
-"Bundle 'ervandew/supertab' 
-" Typescript support
-"Bundle 'leafgarland/typescript-vim'
 " Improved status bar
 Bundle 'bling/vim-airline' 
 " Latex support
@@ -49,9 +39,6 @@ filetype plugin indent on    " required
 syntax on
 
 set hidden
-
-" Activate vim syntax completion may conflict with YouCompleteMe
-" set omnifunc=syntaxcomplete#complete
 
 " Colorscheme
 set t_Co=256
@@ -79,8 +66,6 @@ set softtabstop=2
 set tabstop=2
 set smarttab
 set expandtab
-"set list
-"set listchars=tab:>-,trail:·,extends:>,eol:
 
 " Always show some context
 set scrolloff=4
@@ -111,9 +96,6 @@ set number
 " Set indent settings
 "set cindent
 set smartindent
-
-" Remove scratch preview from autocomplete
-"set completeopt-=preview
 
 " Closes the preview window after leaving the insert mode
 autocmd InsertLeave * if pumvisible() == 0|pclose|endif
@@ -180,9 +162,6 @@ let g:tex_flavor='latex'
 let g:Tex_DefaultTargetFormat='pdf'
 let g:Tex_CompileRule_pdf='pdflatex -shell-escape -interaction=nonstopmode $*'
 
-" Nerdtree
-" noremap <C-n> :NERDTreeToggle<CR>
-
 " Syntastic
 " Make the list a little shorter
 let g:syntastic_loc_list_height = 5
@@ -199,6 +178,3 @@ let g:ycm_confirm_extra_conf = 0
 
 " Eclim
 let g:EclimCompletionMethod = 'omnifunc'
-
-" SuperTab 
-" let g:SuperTabDefaultCompletionType = context"
