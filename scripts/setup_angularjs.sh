@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Clone Node.js
+cd ~/dev
 git clone https://github.com/joyent/node.git
 
 # Install Node.js
