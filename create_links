@@ -9,3 +9,5 @@ function create-alias() {
 $(create-alias vim/tmux.conf ~/.tmux.conf)
 $(create-alias git/gitconfig ~/.gitconfig)
 $(create-alias vim/vimrc ~/.vimrc)
+$(create-alias terminal/zshrc ~/.zshrc)
+$(create-alias .atom ~/)

@@ -1,4 +1,25 @@
 #!/bin/bash
 
+# Add atom repo
+sudo add-apt-repository ppa:webupd8team/atom
+
+# Update repos
+sudo apt-get update
+sudo apt-get upgrade
+
 # Dependencies
-sudo apt-get install build-essential cmake python-dev r-base vim curl openssl libssl-dev
+sudo apt-get install build-essential cmake libpq-dev python-setuptools python-dev r-base vim curl openssl libssl-dev python-pip npm atom postgresql postgresql-contrib
+
+# Update packages
+sudo pip install --upgrade pip
+sudo pip install --upgrade virtualenv
+sudo pip install virtualenvwrapper
+sudo pip install autopep8
+sudo pip install jsbeautifier
+sudo pip install pylama
+sudo pip install pylama-pylint
+sudo pip install matplotlib
+
+
+# Fix links to nodejs
+sudo ln -s /usr/bin/nodejs /usr/bin/node
