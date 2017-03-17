@@ -28,6 +28,8 @@
   "git-plus":
     general:
       _analyticsUserId: "8ab7d407-ada8-4c5c-9cd5-14d673d62149"
+    remoteInteractions:
+      pullBeforePush: true
   latex:
     texPath: "/usr/local/texlive/2015/bin/x86_64-darwin/"
   linter:
