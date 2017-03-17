@@ -4,11 +4,16 @@
 sudo add-apt-repository ppa:webupd8team/atom
 
 # Update repos
-sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get update --yes
+sudo apt-get upgrade --yes
 
 # Dependencies
-sudo apt-get install build-essential cmake libpq-dev python-setuptools python-dev r-base vim curl openssl libssl-dev python-pip npm atom postgresql postgresql-contrib
+sudo apt-get install build-essential cmake libpq-dev python-setuptools python3-setuptools python3-pip python-dev r-base vim curl openssl libssl-dev python-pip npm atom tidy postgresql postgresql-contrib zsh --yes
+
+# Install oh-my-zsh
+curl -L http://install.ohmyz.sh > install.sh
+sudo sh install.sh
+# chsh -s $(which zsh) $(whoami)
 
 # Update packages
 sudo pip install --upgrade pip

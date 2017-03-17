@@ -1,0 +1,61 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "/tmp/d-11729-7670-hxcmwb/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/tmp/d-11729-7670-hxcmwb/package.tgz",
+        "spec": "/tmp/d-11729-7670-hxcmwb/package.tgz",
+        "type": "local"
+      },
+      "/tmp/apm-install-dir-11729-7670-lfmmhu"
+    ]
+  ],
+  "_from": "../d-11729-7670-hxcmwb/package.tgz",
+  "_id": "tomorrow-night-eighties@0.5.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/tomorrow-night-eighties",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/tmp/d-11729-7670-hxcmwb/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/tmp/d-11729-7670-hxcmwb/package.tgz",
+    "spec": "/tmp/d-11729-7670-hxcmwb/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-11729-7670-hxcmwb/package.tgz",
+  "_shasum": "b1cc3e6698620a24d8545e668879d750936614f5",
+  "_shrinkwrap": null,
+  "_spec": "/tmp/d-11729-7670-hxcmwb/package.tgz",
+  "_where": "/tmp/apm-install-dir-11729-7670-lfmmhu",
+  "bugs": {
+    "url": "https://github.com/blakehall/tomorrow-night-eighties/issues"
+  },
+  "dependencies": {},
+  "description": "An atom conversion of the Tomorrow Night Eighties theme.",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "homepage": "https://github.com/blakehall/tomorrow-night-eighties#readme",
+  "license": "MIT",
+  "name": "tomorrow-night-eighties",
+  "optionalDependencies": {},
+  "private": false,
+  "readme": "# tomorrow-night-eighties theme\n\nBased on the Tomorrow Night Eighties theme.\n\n![](https://api.monosnap.com/image/download?id=F9oH4Z8VvmMO6hYst81wDJzrEBmR8h)\n\n\n`#2d2d2d` Background\n`#393939` Current Line\n`#515151` Selection\n`#cccccc` Foreground\n`#999999` Comment\n`#f2777a` Red\n`#f99157` Orange\n`#ffcc66` Yellow\n`#99cc99` Green\n`#66cccc` Aqua\n`#6699cc` Blue\n`#cc99cc` Purple\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blakehall/tomorrow-night-eighties.git"
+  },
+  "theme": "syntax",
+  "version": "0.5.0"
+}

@@ -1,0 +1,60 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "/tmp/d-11729-6219-lwtgm9/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/tmp/d-11729-6219-lwtgm9/package.tgz",
+        "spec": "/tmp/d-11729-6219-lwtgm9/package.tgz",
+        "type": "local"
+      },
+      "/tmp/apm-install-dir-11729-6219-1ni8pz2"
+    ]
+  ],
+  "_from": "../d-11729-6219-lwtgm9/package.tgz",
+  "_id": "language-django@0.1.1",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/language-django",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/tmp/d-11729-6219-lwtgm9/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/tmp/d-11729-6219-lwtgm9/package.tgz",
+    "spec": "/tmp/d-11729-6219-lwtgm9/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-11729-6219-lwtgm9/package.tgz",
+  "_shasum": "3131918bdfe827e17fac86f876aba21764c453a8",
+  "_shrinkwrap": null,
+  "_spec": "/tmp/d-11729-6219-lwtgm9/package.tgz",
+  "_where": "/tmp/apm-install-dir-11729-6219-1ni8pz2",
+  "bugs": {
+    "url": "https://github.com/gilsondev/atom-language-django/issues"
+  },
+  "dependencies": {},
+  "description": "Package to coding Django Projects with Atom.",
+  "devDependencies": {},
+  "engines": {
+    "atom": "*",
+    "node": "*"
+  },
+  "homepage": "https://github.com/gilsondev/atom-language-django#readme",
+  "license": "MIT",
+  "name": "language-django",
+  "optionalDependencies": {},
+  "readme": "Language Django\n===========\n\nPackage to Atom Editor to improve Django development. This package was based in bundle Django of the TextMate.\n\nLicense: GPLv2\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gilsondev/atom-language-django.git"
+  },
+  "version": "0.1.1"
+}

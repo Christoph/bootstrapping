@@ -1,0 +1,1 @@
+{"source":".minimap .highlight-selected {\n  background: #ffffff;\n}\n.minimap .highlight-selected.selected {\n  background: rgba(255, 255, 255, 0.5);\n}\n"}
