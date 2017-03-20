@@ -3,8 +3,8 @@
     general:
       _analyticsUserId: "b2652afc-d517-49ba-9552-23c7d890ccd6"
   "autocomplete-python":
-    extraPaths: "/home/chris/virtualenvs/$PROJECT/lib/python2.7/site-packages"
-    pythonPaths: "/home/chris/virtualenvs/$PROJECT/bin/python"
+    extraPaths: "/home/chris/.virtualenvs/$PROJECT/lib/python3.5/site-packages"
+    pythonPaths: "/home/chris/.virtualenvs/$PROJECT/bin/python"
     useKite: false
     useSnippets: "required"
   core:
@@ -46,7 +46,7 @@
   "linter-pylama":
     executablePath: "/usr/local/bin/pylama"
     ignoreErrorsAndWarnings: "D203,D212,D213,D404,D210,D100,E0401,R0201,E402,C0413"
-    pylamaVersion: "external"
+    interpreter: "python3"
     usePep257: false
     usePyflakes: false
     usePylint: true
@@ -54,6 +54,7 @@
     executable: "/usr/local/bin/pylint"
   "linter-tidy":
     executablePath: "/usr/bin/tidy"
+  "linter-ui-default": {}
   minimap:
     plugins:
       "find-and-replace": true
