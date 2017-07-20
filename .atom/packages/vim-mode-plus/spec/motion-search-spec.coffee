@@ -5,14 +5,11 @@ describe "Motion Search", ->
   [set, ensure, keystroke, editor, editorElement, vimState] = []
 
   beforeEach ->
+    jasmine.attachToDOM(getView(atom.workspace))
     getVimState (state, _vim) ->
       vimState = state # to refer as vimState later.
       {editor, editorElement} = vimState
       {set, ensure, keystroke} = _vim
-
-  afterEach ->
-    vimState.resetNormalMode()
-    vimState.globalState.reset()
 
   describe "the / keybinding", ->
     pane = null
@@ -75,7 +72,7 @@ describe "Motion Search", ->
       it 'searches to the correct column in visual linewise mode', ->
         ensure ['V /', search: 'ef'],
           selectedText: "abc\ndef\n",
-          characterwiseHead: [1, 1]
+          propertyHead: [1, 1]
           cursor: [2, 0]
           mode: ['visual', 'linewise']
 
@@ -254,17 +251,18 @@ describe "Motion Search", ->
           expect(vimState.highlightSearch.hasMarkers()).toBe(false)
 
       describe "clearHighlightSearchOnResetNormalMode", ->
-        describe "default setting", ->
+        describe "when disabled", ->
           it "it won't clear highlightSearch", ->
+            settings.set('clearHighlightSearchOnResetNormalMode', false)
             ensureHightlightSearch length: 2, text: ["def", "def"], mode: 'normal'
-            dispatch(editorElement, 'vim-mode-plus:reset-normal-mode')
+            ensure "escape", mode: 'normal'
             ensureHightlightSearch length: 2, text: ["def", "def"], mode: 'normal'
 
         describe "when enabled", ->
           it "it clear highlightSearch on reset-normal-mode", ->
             settings.set('clearHighlightSearchOnResetNormalMode', true)
             ensureHightlightSearch length: 2, text: ["def", "def"], mode: 'normal'
-            dispatch(editorElement, 'vim-mode-plus:reset-normal-mode')
+            ensure "escape", mode: 'normal'
             expect(vimState.highlightSearch.hasMarkers()).toBe(false)
             ensure mode: 'normal'
 
@@ -638,24 +636,12 @@ describe "Motion Search", ->
             </span>
           </div>
           """
-      it 'when cursor is on AngleBracket(<, >), it moves to opposite AngleBracket', ->
-        set cursor: [0, 0]
-        ensure '%', cursor: [0, 4]
-        ensure '%', cursor: [0, 0]
-      it 'can find forwarding range of AngleBracket', ->
-        set cursor: [1, 0]
-        ensure '%', cursor: [1, 7]
-        ensure '%', cursor: [1, 2]
       it 'move to pair tag only when cursor is on open or close tag but not on AngleBracket(<, >)', ->
-        set cursor: [0, 0]; ensure '%', cursor: [0, 4] # on '<' of <div>
         set cursor: [0, 1]; ensure '%', cursor: [4, 1]
         set cursor: [0, 2]; ensure '%', cursor: [4, 1]
         set cursor: [0, 3]; ensure '%', cursor: [4, 1]
-        set cursor: [0, 4]; ensure '%', cursor: [0, 0] # on '>' of <div>
 
-        set cursor: [4, 0]; ensure '%', cursor: [4, 5] # on '<' of </div>
         set cursor: [4, 1]; ensure '%', cursor: [0, 1]
         set cursor: [4, 2]; ensure '%', cursor: [0, 1]
         set cursor: [4, 3]; ensure '%', cursor: [0, 1]
         set cursor: [4, 4]; ensure '%', cursor: [0, 1]
-        set cursor: [4, 5]; ensure '%', cursor: [4, 0] # on '>' of </div>

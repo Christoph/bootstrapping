@@ -1,0 +1,1 @@
+{".text.html":{"HTML5 Minimal Template":{"prefix":"html5","body":"<!doctype html>\n<meta charset=utf-8>\n<title>${1:`echo $TM_FILENAME|cut -d. -f1`}</title>\n\n$0\n"},"HTML5 Template":{"prefix":"html5","body":"<!doctype html>\n<html>\n<head>\n\t<meta charset=utf-8>\n\t<title>${1:`echo $TM_FILENAME|cut -d. -f1`}</title>\n</head>\n<body>\n\n$0\n\n</body>\n</html>\n"}}}

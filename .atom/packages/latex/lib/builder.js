@@ -37,7 +37,7 @@ export default class Builder {
   parseLogFile (jobState) {
     const logFilePath = this.resolveLogFilePath(jobState)
     if (fs.existsSync(logFilePath)) {
-      const parser = this.getLogParser(logFilePath, jobState.getFilePath())
+      const parser = this.getLogParser(logFilePath, jobState.getTexFilePath())
       const result = parser.parse()
       if (result) {
         if (result.messages) {
@@ -90,9 +90,9 @@ export default class Builder {
   defaultTexPath (platform) {
     if (platform === 'win32') {
       return [
+        '%SystemDrive%\\texlive\\2017\\bin\\win32',
         '%SystemDrive%\\texlive\\2016\\bin\\win32',
         '%SystemDrive%\\texlive\\2015\\bin\\win32',
-        '%SystemDrive%\\texlive\\2014\\bin\\win32',
         '%ProgramFiles%\\MiKTeX 2.9\\miktex\\bin\\x64',
         '%ProgramFiles(x86)%\\MiKTeX 2.9\\miktex\\bin'
       ].join(';')

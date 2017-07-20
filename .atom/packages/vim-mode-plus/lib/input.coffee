@@ -15,11 +15,15 @@ class Input
   destroy: ->
     {@vimState} = {}
 
-  focus: (charsMax=1) ->
+  focus: (options={}) ->
+    {charsMax, hideCursor} = options
+    charsMax ?= 1
     chars = []
 
     @disposables = new CompositeDisposable()
-    @disposables.add @vimState.swapClassName("vim-mode-plus-input-char-waiting",  "is-focused")
+    classNames = ["vim-mode-plus-input-char-waiting",  "is-focused"]
+    classNames.push('hide-cursor') if hideCursor
+    @disposables.add @vimState.swapClassName(classNames...)
     @disposables.add @vimState.onDidSetInputChar (char) =>
       if charsMax is 1
         @confirm(char)

@@ -4,7 +4,8 @@ vim-mode improved.
 
 <!-- TOC START min:1 max:3 link:true update:true -->
 - [vim-mode-plus](#vim-mode-plus)
-- [What's new in v0.58.0](#whats-new-in-v0580)
+- [Installation](#installation)
+- [Some Features](#some-features)
 - [Important](#important)
 - [Thanks](#thanks)
 - [Issue report](#issue-report)
@@ -26,10 +27,11 @@ vim-mode improved.
 
 <!-- TOC END -->
 
-# What's new in v0.58.0
+# Installation
 
-- In v0.58.0, introduce `preset-occurrence` and `persistent-selection`.
-- In v0.55.0, introduce `occurrence-modifier`
+Install using [Atoms package installer](http://flight-manual.atom.io/using-atom/sections/atom-packages/)
+
+# Some Features
 
 These features are very powerful, especially for the power user. Read the following documents to learn how to use them.  
 
@@ -91,6 +93,7 @@ You can workaround by disabling some keymap. See [#214](https://github.com/t9md/
 
 ### ex-mode?
 
+- The [ex-mode](https://atom.io/packages/ex-mode) package has the most complete ex-mode support.
 - Very immature package [vim-mode-plus-ex-mode](https://atom.io/packages/vim-mode-plus-ex-mode) exists.
 - My thought for ex-mode is [here #52](https://github.com/t9md/atom-vim-mode-plus/issues/52).
 

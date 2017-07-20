@@ -2,8 +2,7 @@ _ = require 'underscore-plus'
 semver = require 'semver'
 {Range, Point, Disposable} = require 'atom'
 {inspect} = require 'util'
-swrap = require '../lib/selection-wrapper'
-settings = require '../lib/settings'
+globalState = require '../lib/global-state'
 
 KeymapManager = atom.keymaps.constructor
 {normalizeKeystrokes} = require(atom.config.resourcePath + "/node_modules/atom-keymap/lib/helpers")
@@ -17,6 +16,11 @@ supportedModeClass = [
   'blockwise'
   'characterwise'
 ]
+
+# Init spec state
+# -------------------------
+beforeEach ->
+  globalState.reset()
 
 # Utils
 # -------------------------
@@ -35,9 +39,6 @@ withMockPlatform = (target, platform, fn) ->
 
 buildKeydownEvent = (key, options) ->
   KeymapManager.buildKeydownEvent(key, options)
-
-headFromProperty = (selection) ->
-  swrap(selection).getBufferPositionFor('head', from: ['property'])
 
 buildKeydownEventFromKeystroke = (keystroke, target) ->
   modifier = ['ctrl', 'alt', 'shift', 'cmd']
@@ -250,7 +251,8 @@ class VimEditor
     'selectionIsReversed',
     'persistentSelectionBufferRange', 'persistentSelectionCount'
     'occurrenceCount', 'occurrenceText'
-    'characterwiseHead'
+    'propertyHead'
+    'propertyTail'
     'scrollTop',
     'mark'
     'mode',
@@ -270,6 +272,11 @@ class VimEditor
       when 1 then [options] = args
       when 2 then [keystroke, options] = args
 
+    unless typeof(options) is 'object'
+      throw new Error("Invalid options for 'ensure': must be 'object' but got '#{typeof(options)}'")
+    if keystroke? and not (typeof(keystroke) is 'string' or Array.isArray(keystroke))
+      throw new Error("Invalid keystroke for 'ensure': must be 'string' or 'array' but got '#{typeof(keystroke)}'")
+
     keystrokeOptions = @getAndDeleteKeystrokeOptions(options)
 
     @validateOptions(options, ensureOptionsOrdered, 'Invalid ensure option')
@@ -279,6 +286,20 @@ class VimEditor
     unless _.isEmpty(keystroke)
       @keystroke(keystroke, keystrokeOptions)
 
+    for name in ensureOptionsOrdered when options[name]?
+      method = 'ensure' + _.capitalize(_.camelize(name))
+      this[method](options[name])
+
+  bindEnsureOption: (optionsBase) =>
+    (keystroke, options) =>
+      intersectingOptions = _.intersection(_.keys(options), _.keys(optionsBase))
+      if intersectingOptions.length
+        throw new Error("conflict with bound options #{inspect(intersectingOptions)}")
+
+      @ensure(keystroke, _.defaults(_.clone(options), optionsBase))
+
+  ensureByDispatch: (command, options) =>
+    dispatch(atom.views.getView(@editor), command)
     for name in ensureOptionsOrdered when options[name]?
       method = 'ensure' + _.capitalize(_.camelize(name))
       this[method](options[name])
@@ -387,8 +408,16 @@ class VimEditor
     actual = (@editor.getTextInBufferRange(r) for r in ranges)
     expect(actual).toEqual(toArray(text))
 
-  ensureCharacterwiseHead: (points) ->
-    actual = (headFromProperty(s) for s in @editor.getSelections())
+  ensurePropertyHead: (points) ->
+    getHeadProperty = (selection) =>
+      @vimState.swrap(selection).getBufferPositionFor('head', from: ['property'])
+    actual = (getHeadProperty(s) for s in @editor.getSelections())
+    expect(actual).toEqual(toArrayOfPoint(points))
+
+  ensurePropertyTail: (points) ->
+    getTailProperty = (selection) =>
+      @vimState.swrap(selection).getBufferPositionFor('tail', from: ['property'])
+    actual = (getTailProperty(s) for s in @editor.getSelections())
     expect(actual).toEqual(toArrayOfPoint(points))
 
   ensureScrollTop: (scrollTop) ->
@@ -436,7 +465,6 @@ class VimEditor
         switch
           when k.input?
             # TODO no longer need to use [input: 'char'] style.
-            # if settings.
             rawKeystroke(_key, target) for _key in k.input.split('')
           when k.search?
             @vimState.searchInput.editor.insertText(k.search) if k.search

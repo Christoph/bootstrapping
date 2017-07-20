@@ -1,30 +1,34 @@
-_ = require 'underscore-plus'
-
 {Disposable, Emitter, CompositeDisposable} = require 'atom'
 
 Base = require './base'
-StatusBarManager = require './status-bar-manager'
 globalState = require './global-state'
 settings = require './settings'
 VimState = require './vim-state'
-{forEachPaneAxis, addClassList, removeClassList} = require './utils'
+forEachPaneAxis = null
 
 module.exports =
   config: settings.config
 
+  getStatusBarManager: ->
+    @statusBarManager ?= new (require './status-bar-manager')
+
   activate: (state) ->
     @subscriptions = new CompositeDisposable
-    @statusBarManager = new StatusBarManager
     @emitter = new Emitter
 
-    service = @provideVimModePlus()
-    @subscribe(Base.init(service))
+    getEditorState = @getEditorState.bind(this)
+    @subscribe(Base.init(getEditorState)...)
     @registerCommands()
     @registerVimStateCommands()
 
+    settings.notifyDeprecatedParams()
+
+    if atom.inSpecMode()
+      settings.set('strictAssertion', true)
+
     if atom.inDevMode()
       developer = new (require './developer')
-      @subscribe(developer.init(service))
+      @subscribe(developer.init(getEditorState))
 
     @subscribe @observeVimMode ->
       message = """
@@ -34,11 +38,10 @@ module.exports =
       atom.notifications.addWarning(message, dismissable: true)
 
     @subscribe atom.workspace.observeTextEditors (editor) =>
-      return if editor.isMini()
-      vimState = new VimState(editor, @statusBarManager, globalState)
-      @emitter.emit('did-add-vim-state', vimState)
+      @createVimState(editor) unless editor.isMini()
 
-    @subscribe atom.workspace.onDidChangeActivePane(@demaximizePane.bind(this))
+    @subscribe atom.workspace.onDidChangeActivePaneItem =>
+      @demaximizePane()
 
     @subscribe atom.workspace.onDidChangeActivePaneItem ->
       if settings.get('automaticallyEscapeInsertModeOnActivePaneItemChange')
@@ -46,10 +49,29 @@ module.exports =
           vimState.activate('normal') if vimState.mode is 'insert'
 
     @subscribe atom.workspace.onDidStopChangingActivePaneItem (item) =>
-      if atom.workspace.isTextEditor(item)
+      if atom.workspace.isTextEditor(item) and not item.isMini()
         # Still there is possibility editor is destroyed and don't have corresponding
         # vimState #196.
-        @getEditorState(item)?.highlightSearch.refresh()
+        vimState = @getEditorState(item)
+        return unless vimState?
+        if globalState.get('highlightSearchPattern')
+          vimState.highlightSearch.refresh()
+        else
+          vimState.getProp('highlightSearch')?.refresh()
+
+    # @subscribe  globalState.get('highlightSearchPattern')
+    # Refresh highlight based on globalState.highlightSearchPattern changes.
+    # -------------------------
+    @subscribe globalState.onDidChange ({name, newValue}) ->
+      if name is 'highlightSearchPattern'
+        if newValue
+          VimState.forEach (vimState) ->
+            vimState.highlightSearch.refresh()
+        else
+          VimState.forEach (vimState) ->
+            # avoid populate prop unnecessarily on vimState.reset on startup
+            if vimState.__highlightSearch
+              vimState.highlightSearch.clearMarkers()
 
     @subscribe settings.observe 'highlightSearch', (newValue) ->
       if newValue
@@ -57,6 +79,11 @@ module.exports =
         globalState.set('highlightSearchPattern', globalState.get('lastSearchPattern'))
       else
         globalState.set('highlightSearchPattern', null)
+
+    @subscribe(settings.observeConditionalKeymaps()...)
+
+    if settings.get('debug')
+      developer?.reportRequireCache(excludeNodModules: false)
 
   observeVimMode: (fn) ->
     fn() if atom.packages.isPackageActive('vim-mode')
@@ -74,7 +101,7 @@ module.exports =
   #   observeVimStates (vimState) -> do something..
   # Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
   observeVimStates: (fn) ->
-    VimState.forEach(fn)
+    VimState?.forEach(fn)
     @onDidAddVimState(fn)
 
   clearPersistentSelectionForEditors: ->
@@ -83,12 +110,12 @@ module.exports =
 
   deactivate: ->
     @subscriptions.dispose()
-    VimState.forEach (vimState) ->
+    VimState?.forEach (vimState) ->
       vimState.destroy()
-    VimState.clear()
+    VimState?.clear()
 
-  subscribe: (arg) ->
-    @subscriptions.add(arg)
+  subscribe: (args...) ->
+    @subscriptions.add(args...)
 
   unsubscribe: (arg) ->
     @subscriptions.remove(arg)
@@ -114,41 +141,40 @@ module.exports =
       @demaximizePane()
       return
 
-    getView = (model) -> atom.views.getView(model)
-    classPaneMaximized = 'vim-mode-plus--pane-maximized'
-    classHideTabBar = 'vim-mode-plus--hide-tab-bar'
-    classHideStatusBar = 'vim-mode-plus--hide-status-bar'
-    classActivePaneAxis = 'vim-mode-plus--active-pane-axis'
+    @maximizePaneDisposable = new CompositeDisposable
 
-    workspaceElement = getView(atom.workspace)
-    paneElement = getView(atom.workspace.getActivePane())
+    addClassList = (element, classList) =>
+      classList = classList.map (className) ->
+        "vim-mode-plus--#{className}"
+      element.classList.add(classList...)
+      @maximizePaneDisposable.add new Disposable ->
+        element.classList.remove(classList...)
 
-    workspaceClassNames = [classPaneMaximized]
-    workspaceClassNames.push(classHideTabBar) if settings.get('hideTabBarOnMaximizePane')
-    workspaceClassNames.push(classHideStatusBar) if settings.get('hideStatusBarOnMaximizePane')
+    workspaceClassList = ['pane-maximized']
+    workspaceClassList.push('hide-tab-bar') if settings.get('hideTabBarOnMaximizePane')
+    workspaceClassList.push('hide-status-bar') if settings.get('hideStatusBarOnMaximizePane')
+    addClassList(atom.views.getView(atom.workspace), workspaceClassList)
 
-    addClassList(workspaceElement, workspaceClassNames...)
+    activePane = atom.workspace.getActivePane()
+    activePaneElement = atom.views.getView(activePane)
+    addClassList(activePaneElement, ['active-pane'])
 
-    forEachPaneAxis (axis) ->
-      paneAxisElement = getView(axis)
-      if paneAxisElement.contains(paneElement)
-        addClassList(paneAxisElement, classActivePaneAxis)
-
-    @maximizePaneDisposable = new Disposable ->
-      forEachPaneAxis (axis) ->
-        removeClassList(getView(axis), classActivePaneAxis)
-      removeClassList(workspaceElement, workspaceClassNames...)
+    forEachPaneAxis ?= require('./utils').forEachPaneAxis
+    root = activePane.getContainer().getRoot()
+    forEachPaneAxis root, (axis) ->
+      paneAxisElement = atom.views.getView(axis)
+      if paneAxisElement.contains(activePaneElement)
+        addClassList(paneAxisElement, ['active-pane-axis'])
 
     @subscribe(@maximizePaneDisposable)
 
   equalizePanes: ->
-    setFlexScale = (newValue, base) ->
-      base ?= atom.workspace.getActivePane().getContainer().getRoot()
-      base.setFlexScale(newValue)
-      for child in base.children ? []
-        setFlexScale(newValue, child)
+    setFlexScale = (root, newValue) ->
+      root.setFlexScale(newValue)
+      for child in root.children ? []
+        setFlexScale(child, newValue)
 
-    setFlexScale(1)
+    setFlexScale(atom.workspace.getActivePane().getContainer().getRoot(), 1)
 
   registerVimStateCommands: ->
     # all commands here is executed with context where 'this' bound to 'vimState'
@@ -203,10 +229,51 @@ module.exports =
     @subscribe atom.commands.add('atom-text-editor:not([mini])', bindToVimState(commands))
 
   consumeStatusBar: (statusBar) ->
-    @statusBarManager.initialize(statusBar)
-    @statusBarManager.attach()
-    @subscribe new Disposable =>
-      @statusBarManager.detach()
+    statusBarManager = @getStatusBarManager()
+    statusBarManager.initialize(statusBar)
+    statusBarManager.attach()
+    @subscribe new Disposable ->
+      statusBarManager.detach()
+
+  consumeDemoMode: ({onWillAddItem, onDidStart, onDidStop, onDidRemoveHover}) ->
+    @subscribe(
+      onDidStart(-> globalState.set('demoModeIsActive', true))
+      onDidStop(-> globalState.set('demoModeIsActive', false))
+      onDidRemoveHover(@destroyAllDemoModeFlasheMarkers.bind(this))
+      onWillAddItem(({item, event}) =>
+        if event.binding.command.startsWith('vim-mode-plus:')
+          commandElement = item.getElementsByClassName('command')[0]
+          commandElement.textContent = commandElement.textContent.replace(/^vim-mode-plus:/, '')
+
+        element = document.createElement('span')
+        element.classList.add('kind', 'pull-right')
+        element.textContent = @getKindForCommand(event.binding.command)
+        item.appendChild(element)
+      )
+    )
+
+  destroyAllDemoModeFlasheMarkers: ->
+    VimState?.forEach (vimState) ->
+      vimState.flashManager.destroyDemoModeMarkers()
+
+  getKindForCommand: (command) ->
+    if command.startsWith('vim-mode-plus')
+      command = command.replace(/^vim-mode-plus:/, '')
+      if command.startsWith('operator-modifier')
+        kind = 'op-modifier'
+      else
+        Base.getKindForCommandName(command) ? 'vmp-other'
+    else
+      'non-vmp'
+
+  createVimState: (editor) ->
+    vimState = new VimState(editor, @getStatusBarManager(), globalState)
+    @emitter.emit('did-add-vim-state', vimState)
+
+  createVimStateIfNecessary: (editor) ->
+    return if VimState.has(editor)
+    vimState = new VimState(editor, @getStatusBarManager(), globalState)
+    @emitter.emit('did-add-vim-state', vimState)
 
   # Service API
   # -------------------------
@@ -218,7 +285,8 @@ module.exports =
 
   provideVimModePlus: ->
     Base: Base
-    getGlobalState: @getGlobalState.bind(this)
-    getEditorState: @getEditorState.bind(this)
+    registerCommandFromSpec: Base.registerCommandFromSpec
+    getGlobalState: @getGlobalState
+    getEditorState: @getEditorState
     observeVimStates: @observeVimStates.bind(this)
     onDidAddVimState: @onDidAddVimState.bind(this)

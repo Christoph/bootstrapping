@@ -1,3 +1,37 @@
+# 0.9.3
+* Fix #79
+* Update Travis CI configuration, fix path comparison in specs, а few minor cleanups (@Arcanemagus)
+
+# 0.9.2
+* Added default values (python.exe and pylama.exe) for Windows
+* Fix #77
+
+# 0.9.1
+* Fixed shadowing of the global variable
+* Fix camelCase typo
+
+# 0.9.0
+* Refactoring and other enhancements
+* Close #38
+
+# 0.8.20
+* Fix and close #75
+
+# 0.8.18
+* Unbreak external pylama (@ddaanet)
+
+# 0.8.17
+* Allow Pyflakes with Radon. Close #71
+* Update pylint to version 1.7.1
+* Update astroid to version 1.5.2
+* Update wrapt to version 1.10.10
+
+# 0.8.16
+* Fix and close #67
+
+# 0.8.15
+* Fix and close #61
+
 # 0.8.14
 * Expand and resolving '~' for pylama path
 * Update radon version to 1.5.0

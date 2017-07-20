@@ -1,8 +1,7 @@
 {Emitter} = require 'atom'
 
 class GlobalState
-  constructor: ->
-    @reset()
+  constructor: (@state) ->
     @emitter = new Emitter
 
     @onDidChange ({name, newValue}) =>
@@ -40,5 +39,6 @@ getInitialState = ->
   highlightSearchPattern: null
   currentFind: null
   register: {}
+  demoModeIsActive: false
 
-module.exports = new GlobalState()
+module.exports = new GlobalState(getInitialState())

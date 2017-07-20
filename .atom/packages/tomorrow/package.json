@@ -1,0 +1,71 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "/tmp/d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/tmp/d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+        "spec": "/tmp/d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+        "type": "local"
+      },
+      "/tmp/apm-install-dir-11752-80717-jq48my.iys2u766r"
+    ]
+  ],
+  "_from": "../d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+  "_id": "tomorrow@1.0.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/tomorrow",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/tmp/d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/tmp/d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+    "spec": "/tmp/d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+  "_shasum": "38627570e0d8ba663b6d480c96b919e834a38a27",
+  "_shrinkwrap": null,
+  "_spec": "/tmp/d-11752-80717-1iyabq.dx42w3ik9/package.tgz",
+  "_where": "/tmp/apm-install-dir-11752-80717-jq48my.iys2u766r",
+  "bugs": {
+    "url": "https://github.com/speric/atom-tomorrow/issues"
+  },
+  "dependencies": {},
+  "description": "An Atom port of the vim Tomorrow theme",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "homepage": "https://github.com/speric/atom-tomorrow#readme",
+  "license": "MIT",
+  "name": "tomorrow",
+  "optionalDependencies": {},
+  "private": false,
+  "readme": "## Tomorrow Syntax Theme\n\nTomorrow is an Atom port of the vim Tomorrow theme, for syntax.\n\n![Tomorrow Syntax Theme](http://cl.ly/image/071z3g1y1A3A/download/tomorrow-cap.png)\n\n### Installation\n\nRun the following command:\n\n```sh\napm install tomorrow\n```\n\nThen go to `Atom > Preferences > Themes` and in the `Syntax Themes` dropdown, select `Tomorrow` from the list.\n\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speric/atom-tomorrow.git"
+  },
+  "theme": "syntax",
+  "version": "1.0.0",
+  "_atomModuleCache": {
+    "version": 1,
+    "dependencies": [],
+    "extensions": {
+      ".json": [
+        "package.json"
+      ]
+    },
+    "folders": []
+  }
+}

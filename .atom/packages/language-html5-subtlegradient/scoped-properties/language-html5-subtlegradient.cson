@@ -1,0 +1,6 @@
+'.text.html.5 .meta.tag':
+  'editor':
+    'completions': []
+'.text.html.5:not(.meta.tag)':
+  'editor':
+    'completions': []

@@ -121,6 +121,12 @@ module.exports =
       description: '''You can use this to set the priority for autocomplete-python
       suggestions. For example, you can use lower value to give higher priority
       for snippets completions which has priority of 2.'''
+    enableTouchBar:
+      type: 'boolean'
+      default: false
+      order: 12
+      title: 'Enable Touch Bar support'
+      description: '''Proof of concept for now, requires tooltips to be enabled and Atom >=1.19.0.'''
 
   installation: null
 
@@ -166,6 +172,7 @@ module.exports =
     dm = new DecisionMaker editorCfg, pluginCfg
 
     Metrics.Tracker.name = "atom acp"
+    Metrics.enabled = atom.config.get('core.telemetryConsent') is 'limited'
 
     atom.packages.onDidActivatePackage (pkg) =>
       if pkg.name is 'kite'

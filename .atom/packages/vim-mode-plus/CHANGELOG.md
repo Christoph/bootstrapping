@@ -1,3 +1,367 @@
+# 0.94.0:
+- Improve: Improve Fold handling in several operations. #809.
+  - `y y`, `d d` now yank/delete whole fold.
+  - `o` now start insertion from *next* line of end-of-fold(OLD-ver was next line of start-of-fold).
+  - `V` on folded row select whole fold, so `V d` delete multiple lines which was folded.
+    - No longer show cursor at incorrect row when `V` on folded row(long lived cosmetic issue now FIXED).
+  - `p` on folded row paste *next* line of end-of-fold(OLD-ver was next line of start-of-fold).
+- New: Add several Fold manipulation commands. #807
+  - Commands:
+    - `z c`: `fold-current-row`
+    - `z C`: `fold-current-row-recursively`
+    - `z o`: `unfold-current-row`
+    - `z O`: `unfold-current-row-recursively`
+    - `z a`: `toggle-fold`
+    - `z A`: `toggle-fold-recursively`
+  - Previously `z c`, `z o` was mapped to following Atom's native fold commands. But now replaced with `vmp`'s one.
+  - Why? for consistency, and vmp's one is multi-cursor aware, linewise selection aware(not manipulate next line of selected row).
+    - `z c`: `editor:fold-current-row`
+    - `z o`: `editor:unfold-current-row`
+- Improve, Experimental: Hide, left/right dock when `maximized-pane`.
+- Improve: Disable `maximized-pane` keymap(`cmd-enter`) in `tree-view` scope.
+- Keymap, Breaking: Remove default `ctrl-v` keymap in search-mini-editor to avoid conflicts. #791
+  - Previous version have following keymap(was experimental, you can recover this by set manually).
+    - scope: `atom-text-editor.vim-mode-plus-search`
+    - keystroke: `ctrl-v` to `vim-mode-plus:search-activate-literal-mode`
+- Fix: Protect from `p` throw exception in some uncertain situation `p` #802.
+- Fix: [Atom-v1.19-beta] Smooth scroll now work again.
+  - This issue is introduced by the big change in editor-rendering rewrite in v1.19.
+- Fix: [Atom-v1.19-beta], `ctrl-y` on first line of editor incorrectly mutate that row(do nothing is correct behavior) #808
+- Fix: [Atom-v1.19-beta] `ctrl-y`, `ctrl-e` now correctly use 2 lines offset.
+- Keymap: Make numpad0-9 behave same way as normal 0-9 key #806
+- Improve?, Breaking: Remove angle-bracket(<,>) matching for `%` motion. refs #700
+  - Still work in progress to improve behavior.
+- Spec: Fix spec failure in v1.19.0-beta.
+
+# 0.93.0:
+- New: `count` support for `g t` to activate Nth pane item(= tab).
+  - `3 g t` activate 3rd pane item.
+  - `7 g t` activate 7th pane item.
+  - `g t` just activate next pane items as previous version.
+  - When specified pane items was not exist, do nothing.
+  - Limitation: vim-mode-plus's command only works on normal text-editor.
+    - You can not do `g t` on non editor pane Item such as `setting-view`.
+- Fix: #766 executing `maximize-pane` on single-pane workspace make screen blank.
+  - This was happening only when pane have not yet split once after atom launch.
+- Fix: #777 `J` at last buffer row no longer clear text.
+- Doc: mention ex-mode link on README.md since it's now support vim-mode-plus.
+
+# 0.92.1:
+- Improve: #782 Skip creating marker/decoration for empty range in hlsearch and incsearch.
+  - E.g.
+    - When user searched `()` literally, it matches empty-range between each char.
+    - In previous release, invisible hlsearch/incsearch marker/decoration was created.
+    - By skipping this empty range highlight, improve responsiveness when user repeat `n` or `N` for that search.
+
+# 0.92.0:
+- Fix: blockwise-selection was not cleared correctly in some situation(but I noticed via code review)
+- Fix: #780 No longer throw exception when close editor in the middle of smooth scrolling.
+- New: #770, #774 Add fold manipulation commands based on PR by @weihanglo.
+  - Commands: Put non-NEW commands here for thoroughness.
+    - `z a`: `toggle-fold`, toggle( fold or unfold ) cursor's fold.( NEW )
+    - `z r`: `unfold-next-indent-level`, unfold deepest folded fold. support count.( NEW )
+    - `z m`: `fold-next-indent-level`, fold deepest unfolded fold. support count.( NEW )
+    - `z M`: `fold-all`, unfold all fold.( not NEW )
+    - `z R`: `unfold-all`, fold all fold.( not NEW )
+  - Setting: `maxFoldableIndentLevel`( default `20` )
+    - Folds which startRow exceeds this level are not folded on `zm` and `zM`
+    - e.g.
+      - If you have 3 folds in editor, each fold starts following indentLevel.
+        - `fold-a: 0`
+        - `fold-b: 1`
+        - `fold-c: 2`
+      - `maxFoldableIndentLevel = 20`:
+        - `z M` fold all
+        - `z m` fold `fold-c`, `fold-b`, `fold-a` on each time.
+      - `maxFoldableIndentLevel = 1`:
+        - `z M` fold `fold-a`
+        - `z m` fold `fold-b`, `fold-a` on each time.
+      - `maxFoldableIndentLevel = 0`:
+        - `z M` fold `fold-a` only.
+        - `z m` fold `fold-a`.
+  - Implementation is NOT exactly same as pure-Vim.
+    - Pure-vim: explicitly manage `foldlevel` value and `zm`, `zr` is done based on `foldlevel` kept.
+    - vmp: Does not manage `foldlevel` explicitly, instead it detect fold state from editor.
+      - This approach gives better compatibility for Atom's native fold commands like `cmd-k cmd-1`
+- Improve: Don't auto-load `vimState.highlightSearch` when nothing to highlight.
+- Internal: #768 Support upcoming new decoration `type: 'cursor'` for cursor visibility in visual-mode.
+- Internal: #763 add spec for ensure minimum required file on vmp startup.
+
+# 0.91.0:
+- Improve, Performance: Reduce amount of IO( number of files to read ) on startup further. #760
+  - Avoid require on initial package activation. Especially following widely-used libs is not longer `require`d on startup.
+    - `lib/selection-wrapper.coffee`
+    - `lib/utils.coffee`
+    - `underscore-plus`
+  - Now `swrap` and `utils` are accessible via lazy-prop( `vimState.utils` and `vimState.swrap` ).
+- Developer: When `debug` setting was set to `true`, log lazy-require info when atom `inDevMode`.
+
+# 0.90.2:
+- Fix: For `search` on initial active-editor after startup, `highlightSearch` did not happened.
+  - This is regression introduced as part of lazy instantiation of `HighlightSearchManager`.
+
+# 0.90.1:
+- Fix: Sorry, removed leftover `console.log` in atom running in dev mode.
+
+# 0.90.0:
+- Improve: Reduce activation time of vim-mode-plus to reduce your frustration on Atom startup. #758
+  - About 2x faster activation time( Full detail is on #758 ).
+  - With Two technique
+    - Define all vmp-command from pre-populated command-table and lazy-require necessary command file on execution.
+    - Defer instantiation of xxxManager referred by `vimState`.
+      - E.g. `vimState.highlightSearch` is instance of `HighlightSearchManager` and it's now set on-demand.
+  - [For vmp developer only] If command signature was changed, need update command-table.
+    - Command signature it's name and scope(e.g. `vim-mode-plus:move-down` and `atom-text-editor` )
+    - [Caution] `write-command-table-on-disk` command is available only when atom running in dev-mode.
+    - [Caution] Directly update `lib/command-table.coffee` if populated-table was changed from loaded one.
+- New, Breaking: Default keymap update #753
+  - macOS user only
+    - `ctrl-s` mapped to `transform-string-by-select-list` in `normal-mode` and `visual-mode`
+  - All user
+    - `z` in `operator-pending` is short hand of `a z`(`a-fold`).
+      - You can do `y z` instead of `y a z`. E.g. When you yank foldable whole `if` block.
+      - You can do `c z` instead of `c a z`. E.g. When you change foldable whole `if` block.
+    - `g r` mapped to `reverse`
+    - `g s` mapped to `sort`
+    - `g c` mapped to `select-latest-change` which correspond to `g v` ( `select-previous-selection` )
+    - `g C` mapped to `camel-case`
+  - What was broken?
+    Before: `g c` was for `camel-case`, `g C` was for `pascal-case`.
+    Now: `g c` is for `select-latest-change`, `g C` is for `camel-case`. No default `pascal-case`.
+- New: Target alias for surround #751, #755
+  - Now `b`, `B`, `r`, `a` char is aliased to corresponding target.
+    - `b` is alias for `(` or `)`
+    - `B` is alias for `{` or `}`
+    - `r` is alias for `[` or `]`
+    - `a` is alias for `<` or `>`( I don't like this, just followed how `surround.vim` is doing ).
+  - These alias can be used in `surround`, `delete-surround`, `change-surround`.
+    - When have these keymap: `surround`( `y s` ), `delete-surround`( `d s` ), `change-surround`(`c s`)
+      - `y s i w b` is equals to `y s i w (`.
+      - `y s i w B` is equals to `y s i w {`
+      - `y s i w r` is equals to `y s i w [`
+      - `y s i w a` is equals to `y s i w <`
+- New: InnerPair pre-targeted `rotate` command
+  - Commands:
+    - `rotate-arguments-of-inner-pair`
+    - `rotate-arguments-backwards-of-inner-pair`
+  - No keymap by default.
+  - E.g.
+    - When you map `g >` to `rotate-arguments-of-inner-pair` and `g <` to `backwards`
+    - You can rotate arg of parenthesis by `g >` and `.` if necessary, `g <` for backwards.
+- Internal: Cleanup `developer.coffee` and remove unused dev commands.
+
+# 0.89.0:
+- New: Text-object for arguments
+  - Keymap:
+    - `i ,`: `inner-arguments`
+    - `a ,`: `a-arguments`
+    - `,`: `inner-arguments`( shorthand keymap available only in operator-pending-mode )
+  - Example:
+    - `c i ,`( you can do `c ,`)
+    - `d i ,`( you can do `d ,`)
+    - `d a ,`
+    - `v a ,`
+  - From where this text-object find arguments?
+    - Auto-detect inner range of `()`, `[]`, `{}` pairs and parse argument and select.
+    - When it failed to find inner-pair range, it fallbacks to current-line range.
+  - How to determine separator of arguments?
+    - Heuristically determine separator from comma `, ` or white-space.
+      - When some separator contains comma, it treat comma as separator.
+      - When no separator contains comma, it treat white-space as separator.
+- New, Setting: #747 Conditional keymap setting `keymapPToPutWithAutoIndent`.
+  - When enabled, `p`, and `P` paste with-auto-indent for linewise paste.
+  - Why I added this helper setting?
+    - You can set keymap by yourself in your `keymap.cson`
+      - But you need to be careful to not overwrite `p` in `operator-pending-mode`.
+    - In `normal-mode`, `p` is mapped to `put`.
+    - In `operator-pending-mode`, `p` is mapped to `inner-paragraph`, as shorthand of `i p`.
+    - When set `p` keymap in your `keymap.cson` without breaking predefined shorthand `p`.
+    - You need to exclude `operator-pending-mode` scope like this.
+      ```coffescript
+      'atom-text-editor.vim-mode-plus:not(.insert-mode):not(.operator-pending-mode)':
+        'p': 'vim-mode-plus:put-after-with-auto-indent'
+      ```
+    - But I don't think I can expect normal user to do so. So
+- New: `rotate`, `rotate-backwards` operator
+  - No keymap by default.
+  - ChangeOrder family operator, which rotate line in `linewise`, argument in `charactewise`.
+- New: #748 ChangeOrder family( child ) operator now work differently for charactewise-target.
+  - Affects: `reverse`, `rotate`, `rotate-backwards`, `sort`, `sort-case-insensitively`, `sort-by-number`
+  - [Same]: When `linewise` target, it change order of line.
+  - [New]: When `characterwise` target, it auto-detect arguments and change order of arguments within characterwise-range.
+- New: Operator `split-arguments` and `split-arguments-with-remove-separator`
+  - Commands:
+    - `split-arguments`: split arguments into multiple-lines within specified target without removing separator.
+    - `split-arguments-with-remove-separator`: behave same as `split-arguments` but it remove separator(sugh as `, `).
+  - Keymap `g ,` to `split-arguments` by default( aggressive decision ).
+    - Pure-Vim's `g , ` is "move to newer cursor position of change list", but vmp have no `changelist` anyway.
+- New: [Experimental] Added `inner-pair` pre-targeted version of `split-arguments` and `reverse` to evaluate it's usefulness.
+  - No keymap
+  - Commands:
+    - `split-arguments-of-inner-any-pair`
+    - `reverse-inner-any-pair`
+- Breaking: Remove `showCursorInVisualMode` setting
+  - Notify and ask confirmation for auto-remove from `config.cson` if it set to non-default value.
+- Improve: `r enter` to replace with new-line now correctly auto-indent inserted new-line.
+- Improve: When `surround` linewse-target, now auto-indent surrounded lines more accurately than previous release.
+
+# 0.88.0:
+- Doc: New wiki page
+  - DifferencesFromPureVim
+  - VmpUniqueKeymaps
+- Keymaps: Normal keymap addition
+  - New: Now `subword` text-object have default keymap, you can change subword by `c i d`.
+    - `i d`: `inner-subword`
+    - `a d`: `a-subword`
+  - `cmd-a` is mapped to `inner-entire` in `operator-pending` and `visual-mode` for macOS user.
+    - So macOS user can use `cmd-a` as shorthand of `i e`(`inner-entire`).
+    - E.g. Change all occurrence in text by `c o cmd-a` instead of `c o i e`
+- Keymaps: Shorthand keymaps in `operator-pending` mode
+  - Prerequisite
+    - In `operator-pending-mode`, next command must be `text-object` or `motion`
+    - So all `operator` command in `operator-pending-mode` is INVALID.
+    - This mean, we can safely use operator command's keymap in `operator-pending-mode` as shorthand keymap of `text-object` or `motion`.
+    - But using these keymap for `motion` is meaningless since motion is single-key, but text-object key is two keystroke(e.g. `i w`).
+    - So I pre-defined short-hand keymap for text-object which was work for me.
+  - What was defined?
+    - `c` as shorthand of `inner-smart-word`, but `c c` is not affected.
+      - You can `yank word` by `y c` instead of `y i w`. ( change by `c c` if you enabled it in setting )
+      - To make `c c` works for `change inner-smart-word`, set `keymapCCToChangeInnerSmartWord` to `true`( `false` by default )
+      - `smart-word` is similar to `word` but it's include `-` char.
+    - `C` as shorthand of `inner-whole-word`
+      - You can `yank whole-word` by `y C` instead of `y i W`. ( change by `c C` )
+    - `d` as shorthand of `inner-subword`, but `d d` is not affected.
+      - You can `yank subword` by `y d` instead of `y i d`. ( change by `c d` )
+    - `p` as shorthand of `inner-paragraph`
+      - You can `yank paragraph` by `y p` instead of `y i p`. ( change by `c p` )
+- Keymaps: Conditional keymap enabled by setting.
+  - Prerequisite
+    - Added several configuration option which is 1-to-1 mapped to keymap.
+    - When set to `true`, corresponding keymap is defined.
+    - This is just as helper to define complex keymap via checkbox.
+    - For me, I enabled all of these setting and I want strongly recommend you to evaluate these setting at least once.
+    - These keymaps are picked from my local keymap which was realy work well for a log time.
+  - Here is new setting, all `false` by default. Effect(good and bad) of these keymap is explained in vmp's setting-view.
+    - `keymapUnderscoreToReplaceWithRegister`
+    - `keymapCCToChangeInnerSmartWord`
+    - `keymapSemicolonToInnerAnyPairInOperatorPendingMode`
+    - `keymapSemicolonToInnerAnyPairInVisualMode`
+    - `keymapBackslashToInnerCommentOrParagraphWhenToggleLineCommentsIsPending`
+- Breaking: Default setting change:
+  - `clearPersistentSelectionOnResetNormalMode`: `true`( `false` in previous version )
+  - `clearHighlightSearchOnResetNormalMode`: `true`( `false` in previous version )
+  - `highlightSearch`: `true`( `false` in previous version )
+  - `useClipboardAsDefaultRegister`: `true`( `false` in previous version )
+- New: #743, #739 New config option `dontUpdateRegisterOnChangeOrSubstitute`( default `false` ).
+  - When set to `true`, all `c`, `s`, `C`, `S` operation no longer update register content.
+  - If you want keep register content unchanged by `c i w`, set this to `false`.
+- New: TextObject `comment-or-paragraph` for use of easy comment-in/out when `g /` is pending.
+- Fix: For commands `set-register-name-to-*` or `set-register-name-to-_`, now show hover and correctly set `with-register` CSS scope on editorElement.
+- Fix, Improve: #744 Make vmp work well with other atom-pkg or atom's native feature.
+  - Update selection prop on command dispatch of outer-vmp command
+    - Now correctly update cursor visibility and start `visual-mode` after `cmd-e` then `cmd-g`.
+  - Update selection prop if editor retake `focus`.
+    - Now correctly start `visual-mode` after `cmd-f` result was confirmed by `enter`.
+- Improve: Better integration with `demo-mode` package
+  - Postpone destroying operator-flash while demo-mode's hover indicator is displayed.
+- Improve: When undo/redoing occurrence operation, flash was suppressed when all occurrence start and end with same column, but now flashed.
+- Improve: Improve containment check for `togggle-preset-occurrence`
+  - When cursor is at right column of non-word char(e.g. closing parenthesis `)`), not longer misunderstand that cursor is on occurrence-marker.
+- Internal: #742 Rewrite `RegisterManager`, reduced complex logic which make me really confuse.
+
+# 0.87.0:
+- New: #732 Add integration with `demo-mode` package.
+  - `demo-mode` is new Atom package I've released recently, it was originally developed as part of vim-mode-plus.
+  - When demo-mode is activated via `demo-mode:toggle`, vmp do special integration to
+    - Make operator flash duration longer than normal duration
+    - Demo-mode hover indicator show `keystorke`, `command` and `kind`(extra info added by vmp) on each keybinding dispatch.
+      - kind is one of `operator`, `text-object`, `motion`, `misc-command`
+- New: #722 New version of put command which paste content to suggested indent level with keeping pasting text layout.
+  - PR by @apazzolini
+  - Normal `p`, `P` paste content as-is, so ignores desirable( or suggested ) indent level.
+  - Following two command respect suggested indent level on linewise paste( no diff for characterwise paste ).
+    - `vim-mode-plus:put-before-with-auto-indent`: Same as `put-before`(`P`) with respect suggested indent level.
+    - `vim-mode-plus:put-after-with-auto-indent`:  Same as `put-after`(`p`) with respect suggested indent level.
+  - No keymaps provided by default
+- Improve: `o`, `O` to adjust IndentLevel when `o`, `O` is executed from empty row #723
+  - PR by @apazzolini
+  - To provider further pure-Vim compatible behavior.
+
+# 0.86.3
+- Improve: #727 Tweak incremental-search match highlight style to not hide covering text in some syntax-theme.
+
+# 0.86.2
+- Fix: #725 Now `v`( or `V` or `ctrl-v`) then `escape g v` correctly re-select previously selected range.
+- Improve: #726 Relax selection-property assertion.
+  - Fix: #716 No longer throw error when confirming color via color-picker then `escape`.
+
+# 0.86.0, 0.86.1(just changelog-typo-fix):
+- New: `insert-at-start-of-subword-occurrence` and `insert-at-end-of-subword-occurrence` command.
+  - Start insert at start or end of `subword` occurrence.
+  - E.g
+    - When I map `{`, and `}` to these command in `normal-mode`.
+      - `{ f`: start insert at each start of subword-occurrence within function.
+      - `} f`: start insert at each end of subword-occurrence within function.
+      - `{ p`: start insert at each start of subword-occurrence within paragraph.
+- Internal, Breaking: Remove `did-restore-cursor-positions` hook which was used in Operator code but no longer used.
+- Internal, Breaking: Remove many of simple accessor method like `getName`, `getOperator`, now just use `@name`, `@operator` to access these values.
+- Improve: Hide cursor on early select
+   - For `supportEarlySelect = true` operator( `surround`, `replace` ).
+   - These operator began to shows cursor on early-select from Atom v1.15, but now hide again for early-select timing.
+- Internal, Dev: #719 No longer use `HTMLElement` as search-input for speedy dev by hot-reload vmp.
+- Internal, Breaking: Move `InsertMode`(was in `insert-mode.coffee`) operations under `MiscCommands`( in `misc-commands.coffee`)
+- Improve: Keep original multi-cursor on occurrence operation by migrating mutation info.
+- Improve: Simplify mark manager and destroy all marker on `vimState.onDidDestroy`.
+- Improve: Clean up mutationManager.
+- Fix, Internal: Now do TYPE check for spec-helper's `ensure` function's argument, some test was silently skipped in previous release.
+
+# 0.85.1:
+- Fix, SUPER Critical: #175 Moving cursor in `visual-mode` make Atom editor really slow.
+  - vmp's mark is stored as marker and was created limitlessly without destroying previous-marker.
+  - As number of marker increased, editor get really slow.
+  - This is old Bug from original vim-mode, but impact get really significant from v0.58.0.
+    - Since from v0.58.0, to track previousSelection(used for `g v`) `<` and `>` mark is updated on every `visual-mode` movement.
+
+# 0.85.0:
+- Fix: When `stayOnYank` was enabled, `y 0`, `y h` no longer move cursor.
+- Fix: [Cosmetic but important] Fix very small cursor position jump( cosmetic ) when activating vL ( because of gap between px and em? )
+- Fix: Respect `v` operator-modifier for `t`( Till ) motion.
+  - e.g. In text "ab" when cursor is at "a"
+    - Old: `d t b` delete "a"( Good ), `d v t b` delete "a"( Bad ).
+    - New: `d t b` delete "a"( Good ), `d v t b` don't delete "a"( Good ).
+- Improve: Now can select line ending new line char in `visual-mode`.
+  - E.g. Move right by `l` at end of line select new-line.
+- Fix: #699 Lost goalColumn in `visual.blockwise` when move across blank-row.
+  - This is regression in v0.84.0.
+- Fix: #119 When `j`, `k` is used as operator's target, don't apply operation when failed to move.
+  - Now more compatible with pure Vim.
+  - Example:
+    - `d j` from last line do nothing. ( In previous version, delete last line ).
+    - `d k` from first line do nothing. ( In previous version, delete first line ).
+- Improve: `g v` after `vL`( visual-linewise ) to restore characterwise `column`.
+- Fix: `v i p d` then `.` repeat from different cursor position now works correctly
+- Internal:
+  - Overhaul: `CursorStyleManager`, `SelectionWrapper`, `TextObject`, `BlockwiseSelection`
+  - Rename `characterwiseHead` to `propertyHead` in `spec-helper.coffee`
+  - Remove lots of unnecessary `null` guard.
+- Breaking: Remove `All` text-obect, it's alias of `Entire` but not used.
+- Breaking: Remove `Edge` text-object, it's experimentally added in the past, but not maintained and not as useful as I originally thought.
+- Improve: TextObject
+  - Improve: No longer iterate `selectTextObject` over each memberSelection of blockwise selection( blockwiseSelection consists of multiple selection ).
+  - Improve: `Fold` , `Function` text-object now always expand if possible by checking containment against selected buffer range
+  - Improve: `Pair` text-object now always find from cursor position.
+  - Improve: Executing text-object from `vL` mode now works as expected in most of text-object.
+  - Internal: Set wise explicitly in most of text-obect rather than dynamically determine from selection range.
+  - Internal: Auto generate `Inner`, or `A` prefixed classes and `AllowForwarding` suffixed classes( reduced lots of boilerplate code ).
+- Improve: visual-blockwise ( `vB`-mode )
+  - #699 Fix: Now respect goalColumn in `vB` when move across blank row by `j` or `k`.
+    - Regression introduced in v0.84.0.
+  - #704 Rewrite vB-mode related code.
+    - vB selection is normalized before selecting text-object.
+    - So no longer iterate `selectTextObject` over each memberSelection of blockwise selection.
+  - Improve: #438 when vB selection respect `goalColumn`
+    - Original goalColumn is respected as long as selection-head is right-most column.
+
 # 0.84.1:
 - Fix: To fix vim-mode-plus-move-selected-text degradation.
 

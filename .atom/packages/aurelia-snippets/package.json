@@ -1,0 +1,72 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "/tmp/d-117327-118417-gnnr00/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/tmp/d-117327-118417-gnnr00/package.tgz",
+        "spec": "/tmp/d-117327-118417-gnnr00/package.tgz",
+        "type": "local"
+      },
+      "/tmp/apm-install-dir-117327-118417-dbqqil"
+    ]
+  ],
+  "_from": "../d-117327-118417-gnnr00/package.tgz",
+  "_id": "aurelia-snippets@1.3.1",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/aurelia-snippets",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/tmp/d-117327-118417-gnnr00/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/tmp/d-117327-118417-gnnr00/package.tgz",
+    "spec": "/tmp/d-117327-118417-gnnr00/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-117327-118417-gnnr00/package.tgz",
+  "_shasum": "7f97073b4ef97822e3922b2932b60b3702ffd7f6",
+  "_shrinkwrap": null,
+  "_spec": "/tmp/d-117327-118417-gnnr00/package.tgz",
+  "_where": "/tmp/apm-install-dir-117327-118417-dbqqil",
+  "author": {
+    "name": "Prosper Otemuyiwa"
+  },
+  "bugs": {
+    "url": "https://github.com/unicodeveloper/atom-aurelia-snippets/issues"
+  },
+  "dependencies": {},
+  "description": "Atom Snippets for Aurelia",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "homepage": "https://github.com/unicodeveloper/atom-aurelia-snippets#readme",
+  "keywords": [
+    "aurelia",
+    "aurelia snippets",
+    "snippets",
+    "es6"
+  ],
+  "license": "MIT",
+  "main": "./snippets",
+  "name": "aurelia-snippets",
+  "optionalDependencies": {},
+  "readme": "# Atom AureliaJS Snippets ![](https://img.shields.io/badge/unicodeveloper-approved-brightgreen.svg)\n\nAn [Atom](https://atom.io/) snippet library for Aurelia JS framework. This library uses ES6 syntax.\n\nInstall\n-------\n\nGo to `Packages > Settings View > Open` once in settings go to the Install tab and search for **aurelia-snippets**\n\nRestart Atom\n\nDocumentation\n--------\n\n-\t[Aurelia Snippets](https://github.com/unicodeveloper/atom-aurelia-snippets/wiki/Aurelia-Snippets)\n\n\nDevelopment\n-----------\n\n```sh\n$ cd ~/.atom/packages\n$ git clone https://github.com/unicodeveloper/atom-aurelia-snippets.git\n$ cd atom-aurelia-snippets\n$ apm install\n$ apm link\n```\n\n## Change log\n\nPlease see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.\n\n## Contributing\n\n1.\tFork it!\n2.\tCreate your feature branch: `git checkout -b my-new-feature`\n3.\tCommit your changes: `git commit -m 'Add some feature'`\n4.\tPush to the branch: `git push origin my-new-feature`\n5.\tSubmit a pull request\n\n## How can I thank you?\n\nWhy not star the github repo? I'd love the attention! Why not share the link for this repository on Twitter or HackerNews? Spread the word!\n\nDon't forget to [follow me on twitter](https://twitter.com/unicodeveloper)!\n\nThanks!\nProsper Otemuyiwa.\n\n## License\n\nThe MIT License (MIT). Please see [License File](LICENSE.md) for more information.\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unicodeveloper/atom-aurelia-snippets.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.3.1"
+}

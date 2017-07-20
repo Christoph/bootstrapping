@@ -1,0 +1,73 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "/tmp/d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/tmp/d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+        "spec": "/tmp/d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+        "type": "local"
+      },
+      "/tmp/apm-install-dir-117521-18259-1elyudx.00547h9f6r"
+    ]
+  ],
+  "_from": "../d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+  "_id": "language-typescript-grammars-only@1.6.0",
+  "_inCache": true,
+  "_location": "/language-typescript-grammars-only",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/tmp/d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/tmp/d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+    "spec": "/tmp/d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+  "_shasum": "7f2b618fcae7507d65a4e7033e21d56daa4fc6e4",
+  "_shrinkwrap": null,
+  "_spec": "/tmp/d-117521-18259-1l09qx8.7gdaolayvi/package.tgz",
+  "_where": "/tmp/apm-install-dir-117521-18259-1elyudx.00547h9f6r",
+  "bugs": {
+    "url": "https://github.com/tcarlsen/language-typescript-grammars-only/issues"
+  },
+  "dependencies": {},
+  "description": "A grammar only language package for TypeScript",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">=0.174.0 <2.0.0"
+  },
+  "homepage": "https://github.com/tcarlsen/language-typescript-grammars-only#readme",
+  "keywords": [
+    "language",
+    "grammar",
+    "typescript"
+  ],
+  "license": "MIT",
+  "name": "language-typescript-grammars-only",
+  "optionalDependencies": {},
+  "readme": "# TypeScript language support in Atom\n\nAll respect to [Atom TypeScript](https://github.com/TypeStrong/atom-typescript), but for me it did to much, so I decided to make grammar only language package version.\n\nI can't call this package `language-typescript` because that package is deprecated somehow.\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tcarlsen/language-typescript-grammars-only.git"
+  },
+  "version": "1.6.0",
+  "_atomModuleCache": {
+    "version": 1,
+    "dependencies": [],
+    "extensions": {
+      ".json": [
+        "package.json"
+      ]
+    },
+    "folders": []
+  }
+}

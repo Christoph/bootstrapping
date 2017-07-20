@@ -19,6 +19,7 @@ const DBUS_NAMES = {
 
 function syncSource (uri, point) {
   const filePath = decodeURI(url.parse(uri).pathname)
+  atom.focus()
   atom.workspace.open(filePath).then(editor => editor.setCursorBufferPosition(point))
 }
 
@@ -27,8 +28,8 @@ export default class EvinceOpener extends Opener {
 
   constructor (name = 'Evince', dbusNames = DBUS_NAMES) {
     super(() => {
-      for (const texPath of Array.from(this.windows.keys())) {
-        this.disposeWindow(texPath)
+      for (const filePath of Array.from(this.windows.keys())) {
+        this.disposeWindow(filePath)
       }
     })
     this.name = name
@@ -47,8 +48,8 @@ export default class EvinceOpener extends Opener {
   }
 
   async getWindow (filePath, texPath) {
-    if (this.windows.has(texPath)) {
-      return this.windows.get(texPath)
+    if (this.windows.has(filePath)) {
+      return this.windows.get(filePath)
     }
 
     // First find the internal document name
@@ -59,7 +60,7 @@ export default class EvinceOpener extends Opener {
     const windowNames = await this.getWindowList(evinceApplication)
 
     // Get the window interface of the of the first (only) window
-    const onClosed = () => this.disposeWindow(texPath)
+    const onClosed = () => this.disposeWindow(filePath)
     const windowInstance = {
       evinceWindow: await this.getInterface(documentName, windowNames[0], this.dbusNames.windowInterface),
       onClosed
@@ -72,20 +73,20 @@ export default class EvinceOpener extends Opener {
 
     windowInstance.evinceWindow.on('SyncSource', syncSource)
     windowInstance.evinceWindow.on('Closed', windowInstance.onClosed)
-    this.windows.set(texPath, windowInstance)
+    this.windows.set(filePath, windowInstance)
 
     // This seems to help with future syncs
-    windowInstance.evinceWindow.SyncView(texPath, [0, 0], 0)
+    await this.syncView(windowInstance.evinceWindow, texPath, [0, 0], 0)
 
     return windowInstance
   }
 
-  disposeWindow (texPath) {
-    const windowInstance = this.windows.get(texPath)
+  disposeWindow (filePath) {
+    const windowInstance = this.windows.get(filePath)
     if (windowInstance) {
       windowInstance.evinceWindow.removeListener('SyncSource', syncSource)
       windowInstance.evinceWindow.removeListener('Closed', windowInstance.onClosed)
-      this.windows.delete(texPath)
+      this.windows.delete(filePath)
     }
   }
 
@@ -97,7 +98,7 @@ export default class EvinceOpener extends Opener {
       }
 
       // SyncView seems to want to activate the window sometimes
-      windowInstance.evinceWindow.SyncView(texPath, [lineNumber, 0], 0)
+      await this.syncView(windowInstance.evinceWindow, texPath, [lineNumber, 0], 0)
 
       return true
     } catch (error) {
@@ -137,6 +138,18 @@ export default class EvinceOpener extends Opener {
           reject(error)
         } else {
           resolve(windowNames)
+        }
+      })
+    })
+  }
+
+  syncView (evinceWindow, source, point, timestamp) {
+    return new Promise((resolve, reject) => {
+      evinceWindow.SyncView(source, point, timestamp, (error) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve()
         }
       })
     })

@@ -5,12 +5,12 @@ _ = require 'underscore-plus'
   moveCursorLeft
   moveCursorRight
   limitNumber
-  shrinkRangeEndToBeforeNewLine
+  isEmptyRow
+  setBufferRow
 } = require './utils'
-swrap = require './selection-wrapper'
 Operator = require('./base').getClass('Operator')
 
-# Insert entering operation
+# Operator which start 'insert-mode'
 # -------------------------
 # [NOTE]
 # Rule: Don't make any text mutation before calling `@selectTarget()`.
@@ -20,7 +20,6 @@ class ActivateInsertMode extends Operator
   flashTarget: false
   finalSubmode: null
   supportInsertionCount: true
-  flashCheckpoint: 'custom'
 
   observeWillDeactivateMode: ->
     disposable = @vimState.modeManager.preemptWillDeactivateMode ({mode}) =>
@@ -31,8 +30,7 @@ class ActivateInsertMode extends Operator
       textByUserInput = ''
       if change = @getChangeSinceCheckpoint('insert')
         @lastChange = change
-        changedRange = new Range(change.start, change.start.traverse(change.newExtent))
-        @vimState.mark.setRange('[', ']', changedRange)
+        @setMarkForChange(new Range(change.start, change.start.traverse(change.newExtent)))
         textByUserInput = change.newText
       @vimState.register.set('.', text: textByUserInput) # Last inserted text
 
@@ -90,25 +88,24 @@ class ActivateInsertMode extends Operator
     limitNumber(@insertionCount, max: 100)
 
   execute: ->
-    if @isRepeated()
+    if @repeated
       @flashTarget = @trackChange = true
 
       @startMutation =>
-        @selectTarget() if @isRequireTarget()
+        @selectTarget() if @target?
         @mutateText?()
-        mutatedRanges = []
         for selection in @editor.getSelections()
-          mutatedRanges.push(@repeatInsert(selection, @lastChange?.newText ? ''))
+          @repeatInsert(selection, @lastChange?.newText ? '')
           moveCursorLeft(selection.cursor)
-        @mutationManager.setBufferRangesForCustomCheckpoint(mutatedRanges)
+        @mutationManager.setCheckpoint('did-finish')
 
       if @getConfig('clearMultipleCursorsOnEscapeInsertMode')
         @vimState.clearSelections()
 
     else
-      @normalizeSelectionsIfNecessary() if @isRequireTarget()
+      @normalizeSelectionsIfNecessary()
       @createBufferCheckpoint('undo')
-      @selectTarget() if @isRequireTarget()
+      @selectTarget() if @target?
       @observeWillDeactivateMode()
 
       @mutateText?()
@@ -119,7 +116,12 @@ class ActivateInsertMode extends Operator
       @createBufferCheckpoint('insert')
       topCursor = @editor.getCursorsOrderedByBufferPosition()[0]
       @topCursorPositionAtInsertionStart = topCursor.getBufferPosition()
-      @vimState.activate('insert', @finalSubmode)
+
+      # Skip normalization of blockwiseSelection.
+      # Since want to keep multi-cursor and it's position in when shift to insert-mode.
+      for blockwiseSelection in @getBlockwiseSelections()
+        blockwiseSelection.skipNormalization()
+      @activateMode('insert', @finalSubmode)
 
 class ActivateReplaceMode extends ActivateInsertMode
   @extend()
@@ -141,7 +143,7 @@ class InsertAfter extends ActivateInsertMode
 class InsertAtBeginningOfLine extends ActivateInsertMode
   @extend()
   execute: ->
-    if @isMode('visual', ['characterwise', 'linewise'])
+    if @mode is 'visual' and @submode in ['characterwise', 'linewise']
       @editor.splitSelectionsIntoLines()
     @editor.moveToBeginningOfLine()
     super
@@ -183,8 +185,14 @@ class InsertAboveWithNewline extends ActivateInsertMode
 
     lastCursor.setBufferPosition(cursorPosition)
 
+  autoIndentEmptyRows: ->
+    for cursor in @editor.getCursors()
+      row = cursor.getBufferRow()
+      @editor.autoIndentBufferRow(row) if isEmptyRow(@editor, row)
+
   mutateText: ->
     @editor.insertNewlineAbove()
+    @autoIndentEmptyRows() if @editor.autoIndent
 
   repeatInsert: (selection, text) ->
     selection.insertText(text.trimLeft(), autoIndent: true)
@@ -192,7 +200,11 @@ class InsertAboveWithNewline extends ActivateInsertMode
 class InsertBelowWithNewline extends InsertAboveWithNewline
   @extend()
   mutateText: ->
+    for cursor in @editor.getCursors() when cursorRow = cursor.getBufferRow()
+      setBufferRow(cursor, @getFoldEndRowForRow(cursorRow))
+
     @editor.insertNewlineBelow()
+    @autoIndentEmptyRows() if @editor.autoIndent
 
 # Advanced Insertion
 # -------------------------
@@ -212,28 +224,22 @@ class InsertByTarget extends ActivateInsertMode
 
   execute: ->
     @onDidSelectTarget =>
-      @modifySelection() if @vimState.isMode('visual')
-      for selection in @editor.getSelections()
-        swrap(selection).setBufferPositionTo(@which)
+      # In vC/vL, when occurrence marker was NOT selected,
+      # it behave's very specially
+      # vC: `I` and `A` behaves as shoft hand of `ctrl-v I` and `ctrl-v A`.
+      # vL: `I` and `A` place cursors at each selected lines of start( or end ) of non-white-space char.
+      if not @occurrenceSelected and @mode is 'visual' and @submode in ['characterwise', 'linewise']
+        for $selection in @swrap.getSelections(@editor)
+          $selection.normalize()
+          $selection.applyWise('blockwise')
+
+        if @submode is 'linewise'
+          for blockwiseSelection in @getBlockwiseSelections()
+            blockwiseSelection.expandMemberSelectionsOverLineWithTrimRange()
+
+      for $selection in @swrap.getSelections(@editor)
+        $selection.setBufferPositionTo(@which)
     super
-
-  modifySelection: ->
-    switch @vimState.submode
-      when 'characterwise'
-        # `I(or A)` is short-hand of `ctrl-v I(or A)`
-        @vimState.selectBlockwise()
-        @vimState.clearBlockwiseSelections() # just reset vimState's storage.
-
-      when 'linewise'
-        @editor.splitSelectionsIntoLines()
-        for selection in @editor.getSelections()
-          {start, end} = range = selection.getBufferRange()
-          if @which is 'start'
-            newRange = [@getFirstCharacterPositionForBufferRow(start.row), end]
-          else
-            newRange = shrinkRangeEndToBeforeNewLine(range)
-
-          selection.setBufferRange(newRange)
 
 # key: 'I', Used in 'visual-mode.characterwise', visual-mode.blockwise
 class InsertAtStartOfTarget extends InsertByTarget
@@ -254,6 +260,14 @@ class InsertAtEndOfOccurrence extends InsertByTarget
   @extend()
   which: 'end'
   occurrence: true
+
+class InsertAtStartOfSubwordOccurrence extends InsertAtStartOfOccurrence
+  @extend()
+  occurrenceType: 'subword'
+
+class InsertAtEndOfSubwordOccurrence extends InsertAtEndOfOccurrence
+  @extend()
+  occurrenceType: 'subword'
 
 class InsertAtStartOfSmartWord extends InsertByTarget
   @extend()
@@ -290,9 +304,9 @@ class Change extends ActivateInsertMode
     #   {
     #     a
     #   }
-    isLinewiseTarget = swrap.detectWise(@editor) is 'linewise'
+    isLinewiseTarget = @swrap.detectWise(@editor) is 'linewise'
     for selection in @editor.getSelections()
-      @setTextToRegisterForSelection(selection)
+      @setTextToRegisterForSelection(selection) unless @getConfig('dontUpdateRegisterOnChangeOrSubstitute')
       if isLinewiseTarget
         selection.insertText("\n", autoIndent: true)
         selection.cursor.moveLeft()
@@ -321,10 +335,9 @@ class ChangeToLastCharacterOfLine extends Change
   @extend()
   target: 'MoveToLastCharacterOfLine'
 
-  initialize: ->
-    if @isMode('visual', 'blockwise')
-      # FIXME Maybe because of bug of CurrentSelection,
-      # we use MoveToLastCharacterOfLine as target
-      @acceptCurrentSelection = false
-      swrap.setReversedState(@editor, false) # Ensure all selections to un-reversed
+  execute: ->
+    if @target.wise is 'blockwise'
+      @onDidSelectTarget =>
+        for blockwiseSelection in @getBlockwiseSelections()
+          blockwiseSelection.extendMemberSelectionsToEndOfLine()
     super

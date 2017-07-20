@@ -32,6 +32,8 @@ function distinctID() {
 
 // Send an event to mixpanel
 function track(eventName, properties) {
+  if (!module.exports.enabled) { return; }
+
   var eventData = {
     distinct_id: distinctID(),
     editor_uuid: EDITOR_UUID,
@@ -62,6 +64,7 @@ var Tracker = {
 };
 
 module.exports = {
+  enabled: true,
   distinctID,
   track,
   Tracker,

@@ -3,16 +3,13 @@ settings = require '../lib/settings'
 {inspect} = require 'util'
 
 describe "Operator ActivateInsertMode family", ->
-  [set, ensure, keystroke, editor, editorElement, vimState] = []
+  [set, ensure, bindEnsureOption, keystroke, editor, editorElement, vimState] = []
 
   beforeEach ->
     getVimState (state, vim) ->
       vimState = state
       {editor, editorElement} = vimState
-      {set, ensure, keystroke} = vim
-
-  afterEach ->
-    vimState.resetNormalMode()
+      {set, ensure, keystroke, bindEnsureOption} = vim
 
   describe "the s keybinding", ->
     beforeEach ->
@@ -245,6 +242,56 @@ describe "Operator ActivateInsertMode family", ->
             3!!!!!!\n
             """
 
+  describe "dontUpdateRegisterOnChangeOrSubstitute settings", ->
+    resultTextC = null
+    beforeEach ->
+      set
+        register: '"': text: 'initial-value'
+        textC: """
+        0abc
+        1|def
+        2ghi\n
+        """
+      resultTextC =
+        cl: """
+          0abc
+          1|ef
+          2ghi\n
+          """
+        C: """
+          0abc
+          1|
+          2ghi\n
+          """
+        s: """
+          0abc
+          1|ef
+          2ghi\n
+          """
+        S: """
+          0abc
+          |
+          2ghi\n
+          """
+    describe "when dontUpdateRegisterOnChangeOrSubstitute=false", ->
+      ensure_ = null
+      beforeEach ->
+        ensure_ = bindEnsureOption(mode: 'insert')
+        settings.set("dontUpdateRegisterOnChangeOrSubstitute", false)
+      it 'c mutate register', -> ensure_ 'c l', textC: resultTextC.cl, register: {'"': text: 'd'}
+      it 'C mutate register', -> ensure_ 'C', textC: resultTextC.C, register: {'"': text: 'def'}
+      it 's mutate register', -> ensure_ 's', textC: resultTextC.s, register: {'"': text: 'd'}
+      it 'S mutate register', -> ensure_ 'S', textC: resultTextC.S, register: {'"': text: '1def\n'}
+    describe "when dontUpdateRegisterOnChangeOrSubstitute=true", ->
+      ensure_ = null
+      beforeEach ->
+        ensure_ = bindEnsureOption(mode: 'insert', register: {'"': text: 'initial-value'})
+        settings.set("dontUpdateRegisterOnChangeOrSubstitute", true)
+      it 'c mutate register', -> ensure_ 'c l', textC: resultTextC.cl
+      it 'C mutate register', -> ensure_ 'C', textC: resultTextC.C
+      it 's mutate register', -> ensure_ 's', textC: resultTextC.s
+      it 'S mutate register', -> ensure_ 'S', textC: resultTextC.S
+
   describe "the O keybinding", ->
     beforeEach ->
       spyOn(editor, 'shouldAutoIndent').andReturn(true)
@@ -475,7 +522,7 @@ describe "Operator ActivateInsertMode family", ->
           mode: ['visual', 'blockwise']
 
       describe "I", ->
-        it "insert at colum of start of selection for *each selection*", ->
+        it "insert at column of start of selection for *each selection*", ->
           ensure "I", cursor: [[1, 4], [2, 4], [3, 4]], mode: "insert"
 
         it "can repeat after insert AFTER clearing multiple cursor", ->
@@ -545,6 +592,52 @@ describe "Operator ActivateInsertMode family", ->
       describe "A is short hand of `ctrl-v A`", ->
         it "insert at column of end of selection for *each selected lines*", ->
           ensure "A", cursor: [[1, 5], [2, 5], [3, 5]], mode: "insert"
+
+    describe "when occurrence marker interselcts I and A no longer behave blockwise in vC/vL", ->
+      beforeEach ->
+        jasmine.attachToDOM(editorElement)
+        set cursor: [1, 3]
+        ensure 'g o', occurrenceText: ['3456', '3456', '3456', '3456'], cursor: [1, 3]
+      describe "vC", ->
+        describe "I and A NOT behave as `ctrl-v I`", ->
+          it "I insert at start of each vsually selected occurrence", ->
+            ensure "v j j I",
+              mode: 'insert'
+              textC_: """
+                __0: 3456 890
+                1: !3456 890
+                __2: |3456 890
+                ____3: 3456 890
+                """
+          it "A insert at end of each vsually selected occurrence", ->
+            ensure "v j j A",
+              mode: 'insert'
+              textC_: """
+                __0: 3456 890
+                1: 3456! 890
+                __2: 3456| 890
+                ____3: 3456 890
+                """
+      describe "vL", ->
+        describe "I and A NOT behave as `ctrl-v I`", ->
+          it "I insert at start of each vsually selected occurrence", ->
+            ensure "V j j I",
+              mode: 'insert'
+              textC_: """
+                __0: 3456 890
+                1: |3456 890
+                 _2: |3456 890
+                ____3: !3456 890
+                """
+          it "A insert at end of each vsually selected occurrence", ->
+            ensure "V j j A",
+              mode: 'insert'
+              textC_: """
+                __0: 3456 890
+                1: 3456| 890
+                __2: 3456| 890
+                ____3: 3456! 890
+                """
 
   describe "the gI keybinding", ->
     beforeEach ->
@@ -730,21 +823,22 @@ describe "Operator ActivateInsertMode family", ->
         cursor: [0, 5]
 
   describe 'preserve inserted text', ->
+    ensureDotRegister = null
     beforeEach ->
+      ensureDotRegister = (key, {text}) ->
+        ensure key, mode: 'insert'
+        editor.insertText(text)
+        ensure "escape", register: '.': text: text
+
       set
         text: "\n\n"
         cursor: [0, 0]
 
-    describe "save inserted text to '.' register", ->
-      ensureDotRegister = (key, {text}) ->
-        keystroke key
-        editor.insertText(text)
-        ensure "escape", register: '.': text: text
-      it "[case-i]", -> ensureDotRegister 'i', text: 'abc'
-      it "[case-o]", -> ensureDotRegister 'o', text: 'abc'
-      it "[case-c]", -> ensureDotRegister 'c', text: 'abc'
-      it "[case-C]", -> ensureDotRegister 'C', text: 'abc'
-      it "[case-s]", -> ensureDotRegister 's', text: 'abc'
+    it "[case-i]", -> ensureDotRegister 'i', text: 'iabc'
+    it "[case-o]", -> ensureDotRegister 'o', text: 'oabc'
+    it "[case-c]", -> ensureDotRegister 'c l', text: 'cabc'
+    it "[case-C]", -> ensureDotRegister 'C', text: 'Cabc'
+    it "[case-s]", -> ensureDotRegister 's', text: 'sabc'
 
   describe "repeat backspace/delete happened in insert-mode", ->
     describe "single cursor operation", ->

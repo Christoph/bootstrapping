@@ -1,94 +1,118 @@
 {Point, Disposable, CompositeDisposable} = require 'atom'
+Delegato = require 'delegato'
+SupportCursorSetVisible = null
 
-swrap = require './selection-wrapper'
-isSpecMode = atom.inSpecMode()
-lineHeight = null
-
-getCursorNode = (editorElement, cursor) ->
-  cursorsComponent = editorElement.component.linesComponent.cursorsComponent
-  cursorsComponent.cursorNodesById[cursor.id]
-
-# Return cursor style offset(top, left)
-# ---------------------------------------
-getOffset = (submode, cursor) ->
-  {selection} = cursor
-  switch submode
-    when 'characterwise'
-      return if selection.isReversed()
-      if cursor.isAtBeginningOfLine()
-        new Point(-1, 0)
-      else
-        new Point(0, -1)
-
-    when 'blockwise'
-      return if cursor.isAtBeginningOfLine() or selection.isReversed()
-      new Point(0, -1)
-
-    when 'linewise'
-      bufferPoint = swrap(selection).getBufferPositionFor('head', from: ['property'])
-      editor = cursor.editor
-
-      if editor.isSoftWrapped()
-        screenPoint = editor.screenPositionForBufferPosition(bufferPoint)
-        offset = screenPoint.traversalFrom(cursor.getScreenPosition())
-      else
-        offset = bufferPoint.traversalFrom(cursor.getBufferPosition())
-      if not selection.isReversed() and cursor.isAtBeginningOfLine()
-        offset.row = -1
-      offset
-
-setStyle = (style, {row, column}) ->
-  style.setProperty('top', "#{row * lineHeight}em") unless row is 0
-  style.setProperty('left', "#{column}ch") unless column is 0
-  new Disposable ->
-    style.removeProperty('top')
-    style.removeProperty('left')
-
-# Display cursor in visual mode.
+# Display cursor in visual-mode
 # ----------------------------------
+module.exports =
 class CursorStyleManager
+  lineHeight: null
+
+  Delegato.includeInto(this)
+  @delegatesProperty('mode', 'submode', toProperty: 'vimState')
+
   constructor: (@vimState) ->
     {@editorElement, @editor} = @vimState
-    @lineHeightObserver = atom.config.observe 'editor.lineHeight', (newValue) =>
-      lineHeight = newValue
-      @refresh()
+    SupportCursorSetVisible ?= @editor.getLastCursor().setVisible?
+    @disposables = new CompositeDisposable
+    @disposables.add atom.config.observe('editor.lineHeight', @refresh)
+    @disposables.add atom.config.observe('editor.fontSize', @refresh)
+    @vimState.onDidDestroy(@destroy)
 
-  destroy: ->
-    @styleDisporser?.dispose()
-    @lineHeightObserver.dispose()
-    {@styleDisporser, @lineHeightObserver} = {}
+  destroy: =>
+    @styleDisposables?.dispose()
+    @disposables.dispose()
 
-  refresh: ->
-    {mode, submode} = @vimState
-    @styleDisporser?.dispose()
-    @styleDisporser = new CompositeDisposable
-    return unless mode is 'visual' and @vimState.getConfig('showCursorInVisualMode')
+  updateCursorStyleOld: ->
+    # We must dispose previous style modification for non-visual-mode
+    @styleDisposables?.dispose()
+    @styleDisposables = new CompositeDisposable
+    return unless @mode is 'visual'
 
-    cursors = cursorsToShow = @editor.getCursors()
-    if submode is 'blockwise'
+    if @submode is 'blockwise'
       cursorsToShow = @vimState.getBlockwiseSelections().map (bs) -> bs.getHeadSelection().cursor
+    else
+      cursorsToShow = @editor.getCursors()
 
-    # update visibility
-    for cursor in cursors
-      if cursor in cursorsToShow
-        cursor.setVisible(true) unless cursor.isVisible()
-      else
-        cursor.setVisible(false) if cursor.isVisible()
-
-    # [FIXME] In spec mode, we skip here since not all spec have dom attached.
-    return if isSpecMode
-
-    # [NOTE] In BlockwiseSelect we add selections(and corresponding cursors) in bluk.
-    # But corresponding cursorsComponent(HTML element) is added in sync.
-    # So to modify style of cursorsComponent, we have to make sure corresponding cursorsComponent
-    # is available by component in sync to model.
-    # [FIXME]
-    # When ctrl-f, b, d, u in vL mode, I had to call updateSync to show cursor correctly
-    # But it wasn't necessary before I iintroduce `moveToFirstCharacterOnVerticalMotion` for `ctrl-f`
+    # In visual-mode or in occurrence operation, cursor are added during operation but selection is added asynchronously.
+    # We have to make sure that corresponding cursor's domNode is available at this point to directly modify it's style.
     @editorElement.component.updateSync()
+    for cursor in @editor.getCursors()
+      cursorIsVisible = cursor in cursorsToShow
+      cursor.setVisible(cursorIsVisible)
+      if cursorIsVisible
+        @styleDisposables.add @modifyCursorStyle(cursor, @getCursorStyle(cursor, true))
 
-    for cursor in cursorsToShow when offset = getOffset(submode, cursor)
-      if cursorNode = getCursorNode(@editorElement, cursor)
-        @styleDisporser.add setStyle(cursorNode.style, offset)
+  modifyCursorStyle: (cursor, cursorStyle) ->
+    cursorStyle = @getCursorStyle(cursor, true)
+    # [NOTE] Using non-public API
+    cursorNode = @editorElement.component.linesComponent.cursorsComponent.cursorNodesById[cursor.id]
+    if cursorNode
+      cursorNode.style.setProperty('top', cursorStyle.top)
+      cursorNode.style.setProperty('left', cursorStyle.left)
+      new Disposable ->
+        cursorNode.style?.removeProperty('top')
+        cursorNode.style?.removeProperty('left')
+    else
+      new Disposable
 
-module.exports = CursorStyleManager
+  updateCursorStyleNew: ->
+    # We must dispose previous style modification for non-visual-mode
+    # Intentionally collect all decorations from editor instead of managing
+    # decorations we created explicitly.
+    # Why? when intersecting multiple selections are auto-merged, it's got wired
+    # state where decoration cannot be disposable(not investigated well).
+    # And I want to assure ALL cursor style modification done by vmp is cleared.
+    for decoration in @editor.getDecorations(type: 'cursor', class: 'vim-mode-plus')
+      decoration.destroy()
+
+    return unless @mode is 'visual'
+
+    if @submode is 'blockwise'
+      cursorsToShow = @vimState.getBlockwiseSelections().map (bs) -> bs.getHeadSelection().cursor
+    else
+      cursorsToShow = @editor.getCursors()
+
+    for cursor in @editor.getCursors()
+      @editor.decorateMarker cursor.getMarker(),
+        type: 'cursor'
+        class: 'vim-mode-plus'
+        style: @getCursorStyle(cursor, cursor in cursorsToShow)
+
+  refresh: =>
+    # Intentionally skip in spec mode, since not all spec have DOM attached( and don't want to ).
+    return if atom.inSpecMode()
+
+    @lineHeight = @editor.getLineHeightInPixels()
+
+    if SupportCursorSetVisible
+      @updateCursorStyleOld()
+    else
+      @updateCursorStyleNew()
+
+  getCursorBufferPositionToDisplay: (selection) ->
+    bufferPosition = @vimState.swrap(selection).getBufferPositionFor('head', from: ['property'])
+    if @editor.hasAtomicSoftTabs() and not selection.isReversed()
+      screenPosition = @editor.screenPositionForBufferPosition(bufferPosition.translate([0, +1]), clipDirection: 'forward')
+      bufferPositionToDisplay = @editor.bufferPositionForScreenPosition(screenPosition).translate([0, -1])
+      if bufferPositionToDisplay.isGreaterThan(bufferPosition)
+        bufferPosition = bufferPositionToDisplay
+
+    @editor.clipBufferPosition(bufferPosition)
+
+  getCursorStyle: (cursor, visible) ->
+    if visible
+      bufferPosition = @getCursorBufferPositionToDisplay(cursor.selection)
+      if @submode is 'linewise' and (@editor.isSoftWrapped() or @editor.isFoldedAtBufferRow(bufferPosition.row))
+        screenPosition = @editor.screenPositionForBufferPosition(bufferPosition)
+        {row, column} = screenPosition.traversalFrom(cursor.getScreenPosition())
+      else
+        {row, column} = bufferPosition.traversalFrom(cursor.getBufferPosition())
+
+      return {
+        top: @lineHeight * row + 'px'
+        left: column + 'ch'
+        visibility: 'visible'
+      }
+    else
+      return {visibility: 'hidden'}

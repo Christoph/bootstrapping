@@ -12,9 +12,6 @@ describe "Persistent Selection", ->
     runs ->
       jasmine.attachToDOM(editorElement)
 
-  afterEach ->
-    vimState.resetNormalMode()
-
   describe "CreatePersistentSelection operator", ->
     textForMarker = (marker) ->
       editor.getTextInBufferRange(marker.getBufferRange())
@@ -65,6 +62,13 @@ describe "Persistent Selection", ->
           ensurePersistentSelection 'j .',
             length: 2
             text: ['ooo', 'xxx']
+        it "create-persistent-selection forr current selection and repeatable by .", ->
+          ensurePersistentSelection 'v enter',
+            length: 1
+            text: ['o']
+          ensurePersistentSelection 'j .',
+            length: 2
+            text: ['o', 'x']
 
       describe "[No behavior diff currently] inner-persistent-selection and a-persistent-selection", ->
         it "apply operator to across all persistent-selections", ->
@@ -131,19 +135,16 @@ describe "Persistent Selection", ->
             # cursor: [[3, 12], [4, 12], [0, 12], [1, 12]]
 
     describe "select-occurrence-in-a-persistent-selection", ->
-      [update] = []
-      beforeEach ->
-        vimState.persistentSelection.markerLayer.onDidUpdate(update = jasmine.createSpy())
-
       it "select all instance of cursor word only within marked range", ->
         runs ->
-          paragraphText = "ooo xxx ooo\nxxx ooo xxx\n"
+          paragraphText = """
+            ooo xxx ooo
+            xxx ooo xxx\n
+            """
           ensurePersistentSelection 'g m i p } } j .', # Mark 2 inner-word and 1 inner-paragraph
             length: 2
             text: [paragraphText, paragraphText]
 
-        waitsFor ->
-          update.callCount is 1
         runs ->
           ensure 'g cmd-d',
             selectedText: ['ooo', 'ooo', 'ooo', 'ooo', 'ooo', 'ooo' ]
@@ -171,13 +172,14 @@ describe "Persistent Selection", ->
         expect(vimState.persistentSelection.hasMarkers()).toBe(false)
 
     describe "clearPersistentSelectionOnResetNormalMode", ->
-      describe "default setting", ->
+      describe "when disabled", ->
         it "it won't clear persistentSelection", ->
+          settings.set('clearPersistentSelectionOnResetNormalMode', false)
           ensurePersistentSelection 'g m i w',
             length: 1
             text: ['ooo']
 
-          dispatch(editorElement, 'vim-mode-plus:reset-normal-mode')
+          ensure "escape", mode: 'normal'
           ensurePersistentSelection length: 1, text: ['ooo']
 
       describe "when enabled", ->
@@ -186,5 +188,5 @@ describe "Persistent Selection", ->
           ensurePersistentSelection 'g m i w',
             length: 1
             text: ['ooo']
-          dispatch(editorElement, 'vim-mode-plus:reset-normal-mode')
+          ensure "escape", mode: 'normal'
           expect(vimState.persistentSelection.hasMarkers()).toBe(false)
